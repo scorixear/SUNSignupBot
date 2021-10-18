@@ -1,0 +1,41 @@
+{
+  "name": "sunsignupbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon --exec babel-node src/index.js",
+    "build": "babel src --out-dir dist",
+    "serve": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scorixear/SUNSignupBot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot"
+  ],
+  "author": "Paul Keller",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/scorixear/SUNSignupBot/issues"
+  },
+  "homepage": "https://github.com/scorixear/SUNSignupBot#readme",
+  "dependencies": {
+    "@babel/runtime": "^7.15.4",
+    "discord.js": "^13.1.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.15.7",
+    "@babel/core": "^7.15.5",
+    "@babel/node": "^7.15.4",
+    "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/register": "^7.15.3",
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0",
+    "nodemon": "^2.0.13"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "commands": {
+    "help":{
+      "description": "Returns a list of commands, you are able to use or informations about a specific command!",
+      "error": {
+        "unknown":"This command is unknown. Use `$0help` for a list of commands."
+      },
+      "labels": {
+        "command": "Command"
+      },
+      "success":{
+        "type":"Type in `$0<$1> [args]` to use a $1!"
+      }
+    }
+  },
+  "handlers": {
+    "command": {
+      "error": {
+        "unknown": "This command is unknown. Use `$0help` for a list of commands.",
+        "generic_error": "There was an Error executing the command `$0$1`.",
+        "general_format": "Your command is not well formated:\n`$0<Command> [args] [--<option> [option-arg]]`",
+        "args_format": "Your arguments are not well formated.\n*Hint: Arguments with spaces must be surrounded by one \" and cannot contain any additional \"*",
+        "params_format": "Your options are not well formated.\n*Hint: Options must start with '--' and __can__ contain one additional argument.*"
+      }
+    },
+    "emoji": {
+      "labels": {
+        "did_you_mean": "Did you mean",
+        "synonyms": "Synonyms",
+        "usage": "React with the shown number to execute that command!"
+      }
+    },
+    "permissions": {
+      "error": "Invalid permissions to use `$0$1`!"
+    }
+  },
+  "general": {
+    "error": "Error",
+    "description": "Description",
+    "example": "Example",
+    "usage": "Usage",
+    "reason": "Reason",
+    "server": "Server",
+    "user": "User",
+    "message": "Message",
+    "title" :"Title"
+  },
+  "error": {
+    "user_mention": "You must mention a user",
+    "user_not_found": "User not found",
+    "invalid_permissions": "Invalid permissions",
+    "invalid_usage" : "Invalid usage"
+  }
+}
