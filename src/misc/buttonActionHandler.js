@@ -11,8 +11,10 @@ function initialize() {
     if (!interaction.isButton()) return;
 
     const key = searchMapKey(buttons, (k)=> interaction.customId.match(k));
+
     if (key) {
-      buttons.get(key).call(interaction);
+      await buttons.get(key).call(this, interaction);
+      interaction.deferUpdate();
     }
   });
 }

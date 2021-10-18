@@ -11,6 +11,17 @@
       "success":{
         "type":"Type in `$0<$1> [args]` to use a $1!"
       }
+    },
+    "signup":{
+      "description": "Posts a Signup message into a specific channel",
+      "error": {
+        "missing_arguments_title":"Missing Signup Channel",
+        "missing_arguments": "No signup channel provided, see `$0help signup` for more information",
+        "voiceTitle": "Wrong Channel",
+        "voiceDescription": "The channel needs to be a Text channel!"
+      },
+      "success":{
+      }
     }
   },
   "handlers": {

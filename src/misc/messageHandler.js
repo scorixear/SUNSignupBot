@@ -102,6 +102,68 @@ async function sendRichTextExplicit(guild, channel, author, title, categories, c
   return channel.send({embeds: [richText]});
 }
 
+async function getRichTextExplicitDefault({
+  guild,
+  author,
+  title,
+  categories,
+  color,
+  image,
+  description,
+  thumbnail,
+  url,
+  buttons,
+}) {
+  return getRichTextExplicit(guild, author, title, categories, color, image, description, thumbnail, url, buttons);
+}
+
+async function getRichTextExplicit(guild, author, title, categories, color, image, description, thumbnail, url, buttons) {
+  const richText = new Discord.MessageEmbed();
+  if (title) {
+    richText.setTitle(title);
+  }
+
+  if (categories) {
+    categories.forEach((category) => {
+      if (category.title) {
+        richText.addField(category.title, category.text || '', category.inline || false);
+      } else {
+        richText.addBlankField(category.inline || false);
+      }
+    });
+  }
+  if (color) {
+    richText.setColor(color);
+  }
+  if (description) {
+    richText.setDescription(description);
+  }
+  if (thumbnail) {
+    richText.setThumbnail(thumbnail);
+  }
+  if (image) {
+    richText.attachFiles([`./src/assets/${image}`]);
+    richText.setImage(`attachment://${image}`);
+  }
+
+  if (guild && author) {
+    const guildMember = await guild.members.fetch(author);
+    richText.setFooter(guildMember.nickname, author.avatarURL());
+  }
+
+  richText.setTimestamp(new Date());
+  if (url) {
+    richText.setURL(url);
+  }
+
+  let returnValue = {embeds: [richText]};
+
+  if (buttons) {
+    returnValue = {embeds: [richText], components: [buttons]};
+  }
+  return returnValue;
+}
+
 /**
  * Prints a MessageEmbed
  * @param {Discord.Message} msg the message object to print from
@@ -125,4 +187,6 @@ export default {
   sendRichTextExplicit,
   sendRichTextDefault,
   sendRichTextDefaultExplicit,
+  getRichTextExplicit,
+  getRichTextExplicitDefault,
 };
