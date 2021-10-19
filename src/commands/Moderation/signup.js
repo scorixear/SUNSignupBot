@@ -22,7 +22,7 @@ export default class Signup extends Command {
    * @param {Message} msg the msg object
    * @param {*} params added parameters and their argument
    */
-  executeCommand(args, msg, params) {
+  async executeCommand(args, msg, params) {
     try {
       super.executeCommand(args, msg, params);
     } catch (err) {
@@ -30,7 +30,6 @@ export default class Signup extends Command {
     }
 
     if (args.length === 1) {
-      console.log(args[0]);
       const channel = msg.guild.channels.cache.get(args[0].substr(2, args[0].length - 3));
       if (!channel.isText()) {
         messageHandler.sendRichTextDefault({
@@ -41,14 +40,16 @@ export default class Signup extends Command {
         });
       }
 
+      (await channel.messages.fetch()).filter((message) => message.author.id === config.clientId).first().delete();
+
       const row = new MessageActionRow()
           .addComponents(
               new MessageButton()
-                  .setCustomId('signup')
+                  .setCustomId('signup-1')
                   .setLabel('Sign up')
                   .setStyle('SUCCESS'),
               new MessageButton()
-                  .setCustomId('signout')
+                  .setCustomId('signout-1')
                   .setLabel('Sign out')
                   .setStyle('DANGER'),
           );
