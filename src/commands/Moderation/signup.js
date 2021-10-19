@@ -8,6 +8,10 @@ import messageHandler from '../../misc/messageHandler.js';
 import discordHandler from '../../misc/discordHandler.js';
 
 export default class Signup extends Command {
+  /**
+   *  Standard inizialization
+   * @param {string} category category this command will be placed under in the help function
+   */
   constructor(category) {
     super(category);
     this.usage = `signup #channel`;
@@ -29,10 +33,13 @@ export default class Signup extends Command {
       return;
     }
 
+    // If channel argument was given
     if (args.length === 1) {
+      // Estract channel from the guild cache
       /** @type { TextChannel } */
       const channel = msg.guild.channels.cache.get(args[0].substr(2, args[0].length - 3));
-      if (!channel.isText()) {
+      // if selected channel is not a channel or a voice channel
+      if (!channel || !channel.isText()) {
         messageHandler.sendRichTextDefault({
           msg: msg,
           title: language.commands.signup.error.voiceTitle,
@@ -41,11 +48,14 @@ export default class Signup extends Command {
         });
       }
 
+      // get last messages from this bot
       const filteredMessages = (await channel.messages.fetch()).filter((message) => message.author.id === config.clientId);
+      // delete latest signup message
       if (filteredMessages.size > 0) {
         filteredMessages.first().delete();
       }
 
+      // Create two Buttons for the signup message
       const row = new MessageActionRow()
           .addComponents(
               new MessageButton()
@@ -57,6 +67,7 @@ export default class Signup extends Command {
                   .setLabel('Sign out')
                   .setStyle('DANGER'),
           );
+      // send Signup message
       messageHandler.sendRichTextDefaultExplicit({
         guild: msg.guild,
         channel: channel,
@@ -66,6 +77,7 @@ export default class Signup extends Command {
         buttons: row,
       });
     } else {
+      // otherwise, send error message that we are missing arguments
       messageHandler.sendRichTextDefault({
         msg: msg,
         title: language.commands.signup.error.missing_arguments_title,

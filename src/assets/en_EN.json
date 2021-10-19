@@ -24,6 +24,30 @@
       }
     }
   },
+  "interactions": {
+    "signup": {
+      "already_signed_up_title": "Already signed up",
+      "already_signed_up_desc": "You already signed up for this War.",
+      "confirmation": {
+        "title": "Player found",
+        "desc": "We have found the following Informations about your Character.\nPlease confirm these Informations and we will sign you up for the upcoming war.",
+        "name": "Ingame Name",
+        "weapon1": "First Weapon",
+        "weapon2": "Second Weapon",
+        "role": "Assigned Role",
+        "level": "Current Level",
+        "gearscore": "Current Gear Score",
+        "success": {
+          "title": "Successfully signed up",
+          "desc": "We successfully signed you up for the upcoming war!"
+        }
+      }
+    },
+    "signout": {
+      "confirmation_title": "Successfully signed out",
+      "confirmation_desc": "We have successfully signed you out from the upcoming War!"
+    }
+  },
   "handlers": {
     "command": {
       "error": {

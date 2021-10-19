@@ -102,6 +102,11 @@ async function sendRichTextExplicit(guild, channel, author, title, categories, c
   return channel.send({embeds: [richText]});
 }
 
+/**
+ * Returns a Message Embed
+ * @param {{guild: Discord.Guild, channel: Discord.Channel, title: string, categories: Array<{title: string, text: string, inline: boolean}>, color: number, image: string, description: string, thumbnail: string, url: string, buttons: {}}} param0
+ * @return {Promise<(Discord.Message|Array<Discord.Message>)>}
+ */
 async function getRichTextExplicitDefault({
   guild,
   author,

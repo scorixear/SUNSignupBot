@@ -26,7 +26,7 @@ async function appendData(sheetId, data) {
     spreadsheetId: sheetId,
     range: data.range,
     valueInputOption: 'USER_ENTERED',
-    resources: {
+    requestBody: {
       values: data.values,
     },
   });
@@ -39,11 +39,15 @@ async function appendData(sheetId, data) {
  * @return { * } the response from the google sheets api
  */
 async function updateData(sheetId, data) {
+  await googleSheetsInstance.spreadsheets.values.clear({
+    range: data.range,
+    spreadsheetId: sheetId,
+  });
   return await googleSheetsInstance.spreadsheets.values.update({
     spreadsheetId: sheetId,
     range: data.range,
     valueInputOption: 'USER_ENTERED',
-    resources: {
+    requestBody: {
       values: data.values,
     },
   });
