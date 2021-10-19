@@ -13,7 +13,7 @@ function initialize() {
     const key = searchMapKey(buttons, (k)=> interaction.customId.match(k));
 
     if (key) {
-      await buttons.get(key).call(this, interaction);
+      await buttons.get(key).call(undefined, interaction);
       interaction.deferUpdate();
     }
   });

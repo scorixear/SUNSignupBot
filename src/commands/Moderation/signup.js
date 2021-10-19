@@ -2,7 +2,7 @@ import cmdHandler from '../../misc/commandHandler.js';
 import permHandler from '../../misc/permissionHandler.js';
 import config from '../../config.js';
 import Command from '../command.js';
-import {Message, MessageActionRow, MessageButton} from 'discord.js';
+import {Message, MessageActionRow, MessageButton, TextChannel} from 'discord.js';
 import {dic as language, replaceArgs} from '../../misc/languageHandler.js';
 import messageHandler from '../../misc/messageHandler.js';
 import discordHandler from '../../misc/discordHandler.js';
@@ -30,6 +30,7 @@ export default class Signup extends Command {
     }
 
     if (args.length === 1) {
+      /** @type { TextChannel } */
       const channel = msg.guild.channels.cache.get(args[0].substr(2, args[0].length - 3));
       if (!channel.isText()) {
         messageHandler.sendRichTextDefault({
@@ -40,7 +41,10 @@ export default class Signup extends Command {
         });
       }
 
-      (await channel.messages.fetch()).filter((message) => message.author.id === config.clientId).first().delete();
+      const filteredMessages = (await channel.messages.fetch()).filter((message) => message.author.id === config.clientId);
+      if (filteredMessages.size > 0) {
+        filteredMessages.first().delete();
+      }
 
       const row = new MessageActionRow()
           .addComponents(
