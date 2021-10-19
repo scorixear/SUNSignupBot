@@ -14,10 +14,10 @@ export default class Signup extends Command {
    */
   constructor(category) {
     super(category);
-    this.usage = `signup #channel`;
+    this.usage = `signup <#channel> <eventName>`;
     this.command = 'signup';
     this.description = () => language.commands.signup.description;
-    this.example = 'signup #announcements';
+    this.example = 'signup #announcements EverfallPush';
     this.permissions = ['MANAGE_CHANNELS'];
   }
   /**
@@ -34,10 +34,11 @@ export default class Signup extends Command {
     }
 
     // If channel argument was given
-    if (args.length === 1) {
+    if (args.length === 2) {
       // Estract channel from the guild cache
       /** @type { TextChannel } */
       const channel = msg.guild.channels.cache.get(args[0].substr(2, args[0].length - 3));
+      const eventName = args[1] + '_'+new Date().toUTCString();
       // if selected channel is not a channel or a voice channel
       if (!channel || !channel.isText()) {
         messageHandler.sendRichTextDefault({
@@ -59,11 +60,11 @@ export default class Signup extends Command {
       const row = new MessageActionRow()
           .addComponents(
               new MessageButton()
-                  .setCustomId('signup-1')
+                  .setCustomId('signup-1'+eventName)
                   .setLabel('Sign up')
                   .setStyle('SUCCESS'),
               new MessageButton()
-                  .setCustomId('signout-1')
+                  .setCustomId('signout-1'+eventName)
                   .setLabel('Sign out')
                   .setStyle('DANGER'),
           );

@@ -15,8 +15,8 @@
     "signup":{
       "description": "Posts a Signup message into a specific channel",
       "error": {
-        "missing_arguments_title":"Missing Signup Channel",
-        "missing_arguments": "No signup channel provided, see `$0help signup` for more information",
+        "missing_arguments_title":"Missing Arguments",
+        "missing_arguments": "There are arguments missing, see `$0help signup` for more information",
         "voiceTitle": "Wrong Channel",
         "voiceDescription": "The channel needs to be a Text channel!"
       },
@@ -41,11 +41,31 @@
           "title": "Successfully signed up",
           "desc": "We successfully signed you up for the upcoming war!"
         }
+      },
+      "edit_title": "Edit your Information",
+      "edit_description": "Please react with the given emoji to select which information you want to edit",
+      "edit": {
+        "name_title": "Ingame Name",
+        "name_desc": "Please enter your Ingame Name!",
+        "weapon1_title": "Primary Weapon",
+        "weapon1_desc": "Please select your primary Weapon",
+        "weapon2_title": "Secondary Weapon",
+        "weapon2_desc": "Pleased select your secondary Weapon",
+        "role_title": "Role",
+        "role_desc": "Please select your main role",
+        "level_title": "Level",
+        "level_desc": "Please enter your current Level",
+        "gearscore_title": "Gear Score",
+        "gearscore_desc": "Please enter your current Gear Score",
+        "everything_title": "Everything",
+        "everything_desc": "Update every Information"
       }
     },
     "signout": {
       "confirmation_title": "Successfully signed out",
-      "confirmation_desc": "We have successfully signed you out from the upcoming War!"
+      "confirmation_desc": "We have successfully signed you out from the upcoming War!",
+      "error_title": "Error while signing out!",
+      "error_desc": "There was an error while signing you out."
     }
   },
   "handlers": {

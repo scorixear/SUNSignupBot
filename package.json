@@ -25,7 +25,8 @@
   "dependencies": {
     "@babel/runtime": "^7.15.4",
     "discord.js": "^13.1.0",
-    "googleapis": "^89.0.0"
+    "googleapis": "^89.0.0",
+    "mariadb": "^2.5.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.7",
