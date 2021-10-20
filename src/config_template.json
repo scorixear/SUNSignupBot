@@ -3,7 +3,7 @@
   "clientId": "your_id",
   "discordUrl": "https://discordapp.com/oauth2/authorize?client_id=client_id&scope=bot&permissions=2146958807",
   "repository": "https://github.com/scorixear/SUNSignupBot/",
-  "botPrefix": "!",
+  "botPrefix": "&",
   "googleSheetsId": "your_sheets_id",
   "dbhost": "127.0.0.1",
   "dbuser": "username",
