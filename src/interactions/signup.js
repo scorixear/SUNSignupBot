@@ -5,6 +5,7 @@ import googleSheetsHandler from '../misc/googleSheetsHandler';
 import config from '../config';
 import {dic, dic as language, replaceArgs} from '../misc/languageHandler';
 import sqlHandler from '../misc/sqlHandler';
+import {updateSignupMessage} from '../commands/Moderation/signup';
 
 const userRegistration = new Map();
 const weaponOptions = [
@@ -73,7 +74,7 @@ const roleOptions = [{
 /**
  * Standard Interaction class for default initialization of ButtonActions
  */
-export default class Signup {
+class Signup {
   constructor() {
     // called when Signup was clicked in the Signup post
     buttonActionHandler.addButtonAction('signup-1', signup);
@@ -377,6 +378,7 @@ async function signupConfirm(interaction) {
   if (player) {
   // update database
     await sqlHandler.signIn(event, userId);
+    await updateSignupMessage(event, player[4], player[0], true);
     // send confirmation message that signup was successfull || might need catch around google sheets api call
     channel.send(await messageHandler.getRichTextExplicitDefault({
       guild: interaction.guild,
@@ -720,6 +722,7 @@ async function signout(interaction) {
   if (player) {
     if (await sqlHandler.isSignedIn(event, userId)) {
       if (!await sqlHandler.signOut(event, userId)) {
+        await updateSignupMessage(event, player[4], player[0], false);
         // Send confirmation message to channel that user was signed out
         channel.send(await messageHandler.getRichTextExplicitDefault( {
           guild: interaction.guild,
@@ -740,3 +743,5 @@ async function signout(interaction) {
     color: 0x00cc00,
   }));
 }
+
+export default {Signup};

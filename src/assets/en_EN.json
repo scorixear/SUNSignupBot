@@ -18,9 +18,24 @@
         "missing_arguments_title":"Missing Arguments",
         "missing_arguments": "There are arguments missing, see `$0help signup` for more information",
         "voiceTitle": "Wrong Channel",
-        "voiceDescription": "The channel needs to be a Text channel!"
+        "voiceDescription": "The channel needs to be a Text channel!",
+        "eventTitle": "Event already exists",
+        "eventDesc": "The Event `$0` at `$1` already exists.\nTo delete the event, please delete the Signup Message\nand execute `$2deletesignup \"$0\" $1`"
       },
       "success":{
+      }
+    },
+    "deletesignup": {
+      "description": "Deletes an Event registered with the `$0signup` command",
+      "error": {
+        "sql_title": "Event not found",
+        "sql_desc": "Something went wrong. I could not find the event or couldn't delete it.",
+        "args_title": "Missing Arguments",
+        "args_desc": "There are Arguments missing. See `$0help deletesignup`."
+      },
+      "success": {
+        "title": "Event deleted",
+        "desc": "Successfully deleted $0.\n**Make sure to also delete the Signup Message**"
       }
     }
   },
