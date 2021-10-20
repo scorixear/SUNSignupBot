@@ -1,5 +1,3 @@
-import cmdHandler from '../../misc/commandHandler.js';
-import permHandler from '../../misc/permissionHandler.js';
 import config from '../../config.js';
 import Command from '../command.js';
 import {Message, MessageActionRow, MessageButton, TextChannel} from 'discord.js';
@@ -7,9 +5,6 @@ import {dic as language, replaceArgs} from '../../misc/languageHandler.js';
 import messageHandler from '../../misc/messageHandler.js';
 import discordHandler from '../../misc/discordHandler.js';
 import sqlHandler from '../../misc/sqlHandler.js';
-
-/** @type {Map<string, {msgId: string, channel: TextChannel}>} */
-const currentSignups = new Map();
 
 /**
  *
@@ -19,27 +14,33 @@ const currentSignups = new Map();
  * @param {Boolean} signup
  */
 export async function updateSignupMessage(eventId, role, name, signup) {
-  const saved = currentSignups.get(eventId);
-  const msg = await saved.channel.messages.fetch(saved.msgId);
-  if (msg) {
-    const embed = msg.embeds[0];
-    const signupValue = parseInt(embed.fields[2].value);
-    embed.fields[2].value = (signupValue+(signup?1:-1)).toString();
-    switch (role) {
-      case 'Tank':
-        updateCategory(name, embed, 3, 'Tanks (', signup);
-        break;
-      case 'Healer':
-        updateCategory(name, embed, 4, 'Healers (', signup);
-        break;
-      case 'Melee':
-        updateCategory(name, embed, 5, 'Melees (', signup);
-        break;
-      case 'Range':
-        updateCategory(name, embed, 6, 'Ranged (', signup);
-        break;
+  const eventMessage = await sqlHandler.getMessageEvent(eventId);
+  const guild = await discordHandler.client.guilds.resolve(eventMessage.guildId);
+  if (guild) {
+    const channel = await guild.channels.resolve(eventMessage.channelId);
+    if (channel) {
+      const msg = await channel.messages.resolve(eventMessage.messageId);
+      if (msg) {
+        const embed = msg.embeds[0];
+        const signupValue = parseInt(embed.fields[2].value);
+        embed.fields[2].value = (signupValue+(signup?1:-1)).toString();
+        switch (role) {
+          case 'Tank':
+            updateCategory(name, embed, 3, 'Tanks (', signup);
+            break;
+          case 'Healer':
+            updateCategory(name, embed, 4, 'Healers (', signup);
+            break;
+          case 'Melee':
+            updateCategory(name, embed, 5, 'Melees (', signup);
+            break;
+          case 'Range':
+            updateCategory(name, embed, 6, 'Ranged (', signup);
+            break;
+        }
+        msg.edit({embeds: [embed], components: msg.components});
+      }
     }
-    msg.edit({embeds: [embed], components: msg.components});
   }
 }
 
@@ -96,24 +97,19 @@ export default class Signup extends Command {
 
     // If channel argument was given
     if (args.length === 5) {
-      await sqlHandler.deleteOldEvents(Math.floor(new Date(Date.now()).getTime() / 1000));
-      console.log(Math.floor(new Date(Date.now()).getTime() / 1000));
-
       // Estract channel from the guild cache
       /** @type { TextChannel } */
       const channel = msg.guild.channels.cache.get(args[0].substr(2, args[0].length - 3));
-      console.log(args[2], args[3]);
-      const dateStrings = args[2].split('.');
-      const timeStrings = args[3].split(':');
-      const eventDate = Math.floor(new Date(parseInt(dateStrings[2]), parseInt(dateStrings[1]), parseInt(dateStrings[0]), parseInt(timeStrings[0]), parseInt(timeStrings[1])).getTime() / 1000);
-
-      const eventId = await sqlHandler.createEvent(args[1], eventDate);
-      if (eventId === -1) {
-        console.error('Failed to load event id with values: ', args[1], eventDate);
+      let eventDate;
+      try {
+        const dateStrings = args[2].split('.');
+        const timeStrings = args[3].split(':');
+        eventDate = Math.floor(new Date(parseInt(dateStrings[2]), parseInt(dateStrings[1]), parseInt(dateStrings[0]), parseInt(timeStrings[0]), parseInt(timeStrings[1])).getTime() / 1000);
+      } catch (err) {
         messageHandler.sendRichTextDefault({
           msg: msg,
-          title: language.commands.signup.error.eventTitle,
-          description: replaceArgs(language.commands.signup.error.eventDesc, [args[1], args[2] + ' ' + args[3], config.botPrefix]),
+          title: language.commands.signup.error.formatTitle,
+          description: language.commands.signup.error.formatDesc,
           color: 0xcc0000,
         });
         return;
@@ -124,7 +120,19 @@ export default class Signup extends Command {
         messageHandler.sendRichTextDefault({
           msg: msg,
           title: language.commands.signup.error.voiceTitle,
-          descriptionc: language.command.signup.error.voiceDescription,
+          description: language.commands.signup.error.voiceDescription,
+          color: 0xcc0000,
+        });
+        return;
+      }
+
+      const eventId = await sqlHandler.createEvent(args[1], eventDate);
+      if (eventId === -1) {
+        console.error('Failed to load event id with values: ', args[1], eventDate);
+        messageHandler.sendRichTextDefault({
+          msg: msg,
+          title: language.commands.signup.error.eventTitle,
+          description: replaceArgs(language.commands.signup.error.eventDesc, [args[1], args[2] + ' ' + args[3], config.botPrefix]),
           color: 0xcc0000,
         });
         return;
@@ -185,7 +193,8 @@ export default class Signup extends Command {
         ],
         buttons: row,
       });
-      currentSignups.set(eventId.toString(), {msgId: message.id, channel: channel});
+      await sqlHandler.createMessageEvent(eventId, message.id, channel.id, message.guild.id);
+      console.log(`Created Event ${args[1]} ${eventDate}`);
     } else {
       // otherwise, send error message that we are missing arguments
       messageHandler.sendRichTextDefault({

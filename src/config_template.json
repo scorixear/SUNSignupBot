@@ -9,5 +9,6 @@
   "dbuser": "username",
   "dbpassword": "password",
   "dbport": "3306",
-  "dbDataBase": "sun_signup"
+  "dbDataBase": "sun_signup",
+  "restPort": "8096"
 }

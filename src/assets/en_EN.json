@@ -20,7 +20,9 @@
         "voiceTitle": "Wrong Channel",
         "voiceDescription": "The channel needs to be a Text channel!",
         "eventTitle": "Event already exists",
-        "eventDesc": "The Event `$0` at `$1` already exists.\nTo delete the event, please delete the Signup Message\nand execute `$2deletesignup \"$0\" $1`"
+        "eventDesc": "The Event `$0` at `$1` already exists.\nTo delete the event, please execute `$2deletesignup \"$0\" $1`",
+        "formatTitle": "Wrong Format",
+        "formatDesc": "Your Date and/or Time are in the wrong format.\nMake sure you follow DD.MM.YYYY HH:MM"
       },
       "success":{
       }
@@ -31,11 +33,13 @@
         "sql_title": "Event not found",
         "sql_desc": "Something went wrong. I could not find the event or couldn't delete it.",
         "args_title": "Missing Arguments",
-        "args_desc": "There are Arguments missing. See `$0help deletesignup`."
+        "args_desc": "There are Arguments missing. See `$0help deletesignup`.",
+        "formatTitle": "Wrong Format",
+        "formatDesc": "Your Date and/or Time are in the wrong format.\nMake sure you follow DD.MM.YYYY HH:MM"
       },
       "success": {
         "title": "Event deleted",
-        "desc": "Successfully deleted $0.\n**Make sure to also delete the Signup Message**"
+        "desc": "Successfully deleted $0."
       }
     }
   },
@@ -78,7 +82,7 @@
     },
     "signout": {
       "confirmation_title": "Successfully signed out",
-      "confirmation_desc": "We have successfully signed you out from the upcoming War!",
+      "confirmation_desc": "We have successfully signed you out from the upcoming war!",
       "error_title": "Error while signing out!",
       "error_desc": "There was an error while signing you out."
     }

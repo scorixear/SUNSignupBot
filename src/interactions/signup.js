@@ -6,71 +6,14 @@ import config from '../config';
 import {dic, dic as language, replaceArgs} from '../misc/languageHandler';
 import sqlHandler from '../misc/sqlHandler';
 import {updateSignupMessage} from '../commands/Moderation/signup';
+import {weaponOptions, roleOptions} from './signupConfig';
+import editHandler from './editHandler';
+import sheetHelper from './sheetHelper';
 
+/**
+ * Local Storage for ongoing Signups
+ */
 const userRegistration = new Map();
-const weaponOptions = [
-  {
-    label: 'Sword and Shield',
-    value: 'Sword',
-  },
-  {
-    label: 'Rapier',
-    value: 'Rapier',
-  },
-  {
-    label: 'Hatchet',
-    value: 'Hatchet',
-  },
-  {
-    label: 'Spear',
-    value: 'Spear',
-  },
-  {
-    label: 'Greataxe',
-    value: 'Greataxe',
-  },
-  {
-    label: 'Warhammer',
-    value: 'Warhammer',
-  },
-  {
-    label: 'Bow',
-    value: 'Bow',
-  },
-  {
-    label: 'Musket',
-    value: 'Musket',
-  },
-  {
-    label: 'Fire Staff',
-    value: 'Fire Staff',
-  },
-  {
-    label: 'Life Staff',
-    value: 'Life Staff',
-  },
-  {
-    label: 'Ice Gauntlet',
-    value: 'Ice Gauntlet',
-  },
-];
-
-const roleOptions = [{
-  label: 'Tank',
-  value: 'Tank',
-},
-{
-  label: 'Melee',
-  value: 'Melee',
-},
-{
-  label: 'Range',
-  value: 'Range',
-},
-{
-  label: 'Healer',
-  value: 'Healer',
-}];
 /**
  * Standard Interaction class for default initialization of ButtonActions
  */
@@ -84,15 +27,20 @@ class Signup {
     buttonActionHandler.addButtonAction('signup-confirmation', signupConfirm);
     // called when Edit was clicked after signing up
     buttonActionHandler.addButtonAction('signup-edit', signupEdit);
+    // called after selecting weapon 1
     buttonActionHandler.addButtonAction('signup-weapon1', signupWeapon1);
+    // called after selecting weapon 2
     buttonActionHandler.addButtonAction('signup-weapon2', signupWeapon2);
+    // called after selecting role
     buttonActionHandler.addButtonAction('signup-role', signupRole);
+    // called after selecting weapon 1 from the edit option
     buttonActionHandler.addButtonAction('signup-update-weapon1', signupWeapon1Update);
+    // called after selecting weapon 2 from edit option
     buttonActionHandler.addButtonAction('signup-update-weapon2', signupWeapon2Update);
+    // called after selecting role from edit option
     buttonActionHandler.addButtonAction('signup-update-role', signupRoleUpdate);
-    buttonActionHandler.addButtonAction('edit-weapon1', editWeapon1Event);
-    buttonActionHandler.addButtonAction('edit-weapon2', editWeapon2Event);
-    buttonActionHandler.addButtonAction('edit-role', editRoleEvent);
+
+    editHandler.init();
   }
 }
 
@@ -106,18 +54,14 @@ async function signup(interaction) {
   // create or retrieve Discord direct Message Channel between user and bot
   /** @type{DMChannel} */
   const channel = await interaction.member.createDM();
-  const event = interaction.customId.slice(8);
-
-  // retrieve Players data from signup sheet
-  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  // if data is empty, .values is missing and we initialize with empty array
-  const players = data.values?data.values:[[]];
-  // Finds Player Row by their user ID
-  const player = players.find((subarray)=>subarray[1] === userId);
+  const event = interaction.customId.slice('signup-1'.length);
+  console.log('Signup request received', userId, event);
+  const player = await sheetHelper.getRowFromSheet(userId);
   // If player already registered himself once
   if (player) {
+    // check if sql database has him signed up
     if (await sqlHandler.isSignedIn(event, userId)) {
-      // send already signed up message to suer
+      // send already signed up message to user
       channel.send(await messageHandler.getRichTextExplicitDefault({
         guild: interaction.guild,
         title: language.interactions.signup.already_signed_up_title,
@@ -126,7 +70,7 @@ async function signup(interaction) {
       }));
       // else sign up user
     } else {
-      sendConfirmationMessage(event, channel, player);
+      await sheetHelper.sendConfirmationMessage(event, channel, player);
     }
     // else if player didn't register yet
   } else {
@@ -136,23 +80,24 @@ async function signup(interaction) {
       title: language.interactions.signup.edit.name_title,
       description: language.interactions.signup.edit.name_desc,
     }));
+    // start collector for one message with timeout of 50 seconds
     const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
     collector.on('collect', (msg, c) => {
-      signupName(interaction, event, msg, false);
+      signupName(userId, event, msg, false);
     });
   }
 }
 
 /**
  * Called when Ingame name was entered
- * @param {ButtonInteraction} interaction
+ * @param {number} userId
  * @param {string} event
  * @param {Message} msg
  * @param {bool} update
  */
-async function signupName(interaction, event, msg, update) {
+async function signupName(userId, event, msg, update) {
   // save name in temporary map to update google sheet later at once
-  userRegistration.set(interaction.user.id, {name: msg.content});
+  userRegistration.set(userId, {name: msg.content});
 
   const row = new MessageActionRow()
       .addComponents(
@@ -170,12 +115,12 @@ async function signupName(interaction, event, msg, update) {
 }
 
 /**
- *
+ * Called when Weapon 1 was selected (new entry)
  * @param {SelectMenuInteraction} interaction
  */
 async function signupWeapon1(interaction) {
   userRegistration.get(interaction.user.id).weapon1 = interaction.values[0];
-  const event = interaction.customId.slice(14);
+  const event = interaction.customId.slice('signup-weapon1'.length);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -193,12 +138,12 @@ async function signupWeapon1(interaction) {
 }
 
 /**
- *
+ * Called when weapon 1 was selected (update Entry)
  * @param {SelectMenuInteraction} interaction
  */
 async function signupWeapon1Update(interaction) {
   userRegistration.get(interaction.user.id).weapon1 = interaction.values[0];
-  const event = interaction.customId.slice(21);
+  const event = interaction.customId.slice('signup-update-weapon1'.length);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -216,12 +161,12 @@ async function signupWeapon1Update(interaction) {
 }
 
 /**
- *
+ * Called when weapon 2 was selected (new entry)
  * @param {SelectMenuInteraction} interaction
  */
 async function signupWeapon2(interaction) {
   userRegistration.get(interaction.user.id).weapon2 = interaction.values[0];
-  const event = interaction.customId.slice(14);
+  const event = interaction.customId.slice('signup-weapon2'.length);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -239,12 +184,12 @@ async function signupWeapon2(interaction) {
 }
 
 /**
- *
+ * Called when weapon 2 was selected (update entry)
  * @param {SelectMenuInteraction} interaction
  */
 async function signupWeapon2Update(interaction) {
   userRegistration.get(interaction.user.id).weapon2 = interaction.values[0];
-  const event = interaction.customId.slice(21);
+  const event = interaction.customId.slice('signup-update-weapon2'.length);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -262,12 +207,12 @@ async function signupWeapon2Update(interaction) {
 }
 
 /**
- *
+ * Called when Role was selected (new entry)
  * @param {SelectMenuInteraction} interaction
  */
 async function signupRole(interaction) {
   userRegistration.get(interaction.user.id).role = interaction.values[0];
-  const event = interaction.customId.slice(11);
+  const event = interaction.customId.slice('signup-role'.length);
   const channel = interaction.channel;
 
   // send "get name" message to user
@@ -276,18 +221,18 @@ async function signupRole(interaction) {
     description: language.interactions.signup.edit.level_desc,
   }));
   const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', (msg, c) => {
-    signupLevel(interaction, event, msg);
+  collector.on('collect', async (msg, c) => {
+    await signupLevel(interaction.user.id, interaction.channel, event, msg, false);
   });
 }
 
 /**
- *
+ * Called when Role was selected (update entry)
  * @param {SelectMenuInteraction} interaction
  */
 async function signupRoleUpdate(interaction) {
   userRegistration.get(interaction.user.id).role = interaction.values[0];
-  const event = interaction.customId.slice(18);
+  const event = interaction.customId.slice('signup-update-role'.length);
   const channel = interaction.channel;
 
   // send "get name" message to user
@@ -296,14 +241,21 @@ async function signupRoleUpdate(interaction) {
     description: language.interactions.signup.edit.level_desc,
   }));
   const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', (msg, c) => {
-    signupLevel(interaction, event, msg, true);
+  collector.on('collect', async (msg, c) => {
+    await signupLevel(interaction.user.id, interaction.channel, event, msg, true);
   });
 }
 
-async function signupLevel(interaction, event, msg, update) {
-  userRegistration.get(interaction.user.id).level = msg.content;
-  const channel = interaction.channel;
+/**
+ * Called when Level was collected
+ * @param {string} userId
+ * @param {DMChannel} channel
+ * @param {string} event
+ * @param {Message} msg
+ * @param {Boolean} isUpdate
+ */
+async function signupLevel(userId, channel, event, msg, isUpdate) {
+  userRegistration.get(userId).level = msg.content;
 
   // send "get name" message to user
   channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -311,45 +263,48 @@ async function signupLevel(interaction, event, msg, update) {
     description: language.interactions.signup.edit.gearscore_desc,
   }));
   const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', (msg, c) => {
-    signupGearscore(interaction, event, msg, update);
+  collector.on('collect', async (msg, c) => {
+    await signupGearscore(userId, channel, event, msg, isUpdate);
   });
 }
 
-async function signupGearscore(interaction, event, msg, update) {
-  const userData = userRegistration.get(interaction.user.id);
+/**
+ * Called when Gearscore was collected
+ * @param {*} userId
+ * @param {DMChannel} channel
+ * @param {*} event
+ * @param {*} msg
+ * @param {*} isUpdate
+ */
+async function signupGearscore(userId, channel, event, msg, isUpdate) {
+  // retrieve local stored user data
+  const userData = userRegistration.get(userId);
   userData.gearscore = msg.content;
-  const channel = interaction.channel;
 
-
-  if (update) {
-    const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-    const players = playerData.values?playerData.values:[[]];
-    let playerIndex;
-    let i = 0;
-    for (const p of players) {
-      if (p[1]===interaction.user.id) {
-        playerIndex = i;
-        break;
-      }
-      i++;
-    }
-    await updateSheetTotal([userData.name, interaction.user.id, userData.weapon1, userData.weapon2, userData.role, userData.level, userData.gearscore], playerIndex);
+  // if call is to update sheet
+  if (isUpdate) {
+    // retrieve row index in sheet
+    const playerIndex = await sheetHelper.getIndexFromSheet(userId);
+    await sheetHelper.updateRowInSheet([userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.level, userData.gearscore], playerIndex);
+    console.log('Google Sheet User Updated', userId, event);
   } else {
-    await googleSheetsHandler.appendData(config.googleSheetsId, {range: 'Players!A2:Z', values: [[
+    // append new Row to sheet
+    await googleSheetsHandler.appendData(config.googleSheetsId, {range: config.googleSheetsRange, values: [[
       userData.name,
-      interaction.user.id,
+      userId,
       userData.weapon1,
       userData.weapon2,
       userData.role,
       userData.level,
       userData.gearscore]]});
+    console.log('Google Sheet User Registered', userId, event);
   }
 
-  userRegistration.delete(interaction.user.id);
+  // delete local stored user data
+  userRegistration.delete(userId);
 
-
-  sendConfirmationMessage(event, channel, [userData.name, interaction.user.id, userData.weapon1, userData.weapon2, userData.role, userData.level, userData.gearscore]);
+  // send confirmation message about changed / registered information
+  await sheetHelper.sendConfirmationMessage(event, channel, [userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.level, userData.gearscore]);
 }
 
 /**
@@ -359,7 +314,7 @@ async function signupGearscore(interaction, event, msg, update) {
 async function signupConfirm(interaction) {
   // retrieve user id directly, because not clicked within a guild
   const userId = interaction.user.id;
-  const event = interaction.customId.slice(19);
+  const event = interaction.customId.slice('signup-confirmation'.length);
   // retrieve channel from interaction
   const channel = interaction.channel;
   // get last message send from bot in this channel (the confirm button message)
@@ -369,11 +324,7 @@ async function signupConfirm(interaction) {
     filteredMessages.first().delete();
   }
 
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  // if data is empty, .values is missing and we initialize with empty array
-  const players = playerData.values?playerData.values:[[]];
-  // Finds Player Row by their user ID
-  const player = players.find((subarray)=>subarray[1] === userId);
+  const player = await sheetHelper.getRowFromSheet(userId);
   // If player already registered himself once
   if (player) {
   // update database
@@ -386,6 +337,7 @@ async function signupConfirm(interaction) {
       description: language.interactions.signup.confirmation.success.desc,
       color: 0x00cc00,
     }));
+    console.log('User signed up', userId, event);
   }
 }
 
@@ -396,21 +348,10 @@ async function signupConfirm(interaction) {
  */
 async function signupEdit(interaction) {
   const channel = interaction.channel;
-  const event = interaction.customId.slice(11);
+  const event = interaction.customId.slice('signup-edit'.length);
 
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  const players = playerData.values?playerData.values:[[]];
-  let player;
-  let playerIndex;
-  let i = 0;
-  for (const p of players) {
-    if (p[1]===interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
+  const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
+
   const msg = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit_title,
     description: language.interactions.signup.edit_description,
@@ -459,32 +400,31 @@ async function signupEdit(interaction) {
         // console.log(collected);
         switch (collected.firstKey()) {
           case '1️⃣':
-            await editName(interaction, event, player, playerIndex);
+            await editHandler.editName(channel, event, player, playerIndex);
             break;
           case '2️⃣':
-            await editWeapon1(interaction, event);
+            await editHandler.editWeapon1(channel, event);
             break;
           case '3️⃣':
-            await editWeapon2(interaction, event);
+            await editHandler.editWeapon2(channel, event);
             break;
           case '4️⃣':
-            await editRole(interaction, event);
+            await editHandler.editRole(channel, event);
             break;
           case '5️⃣':
-            await editLevel(interaction, event, player, playerIndex);
+            await editHandler.editLevel(channel, event, player, playerIndex);
             break;
           case '6️⃣':
-            await editGearscore(interaction, event, player, playerIndex);
+            await editHandler.editGearscore(channel, event, player, playerIndex);
             break;
           case '7️⃣':
             channel.send(await messageHandler.getRichTextExplicitDefault({
-              guild: interaction.guild,
               title: language.interactions.signup.edit.name_title,
               description: language.interactions.signup.edit.name_desc,
             }));
             const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-            collector.on('collect', (msg, c) => {
-              signupName(interaction, event, msg, true);
+            collector.on('collect', async (msg, c) => {
+              await signupName(interaction.user.id, event, msg, true);
             });
             break;
         }
@@ -499,208 +439,6 @@ async function signupEdit(interaction) {
   await msg.react('7️⃣');
 }
 
-async function sendConfirmationMessage(event, channel, player) {
-  const row = new MessageActionRow()
-      .addComponents(
-          new MessageButton()
-              .setCustomId('signup-confirmation'+event)
-              .setLabel('Confirm')
-              .setStyle('SUCCESS'),
-          new MessageButton()
-              .setCustomId('signup-edit'+event)
-              .setLabel('Edit')
-              .setStyle('DANGER'),
-      );
-  await channel.send(await messageHandler.getRichTextExplicitDefault({
-    title: language.interactions.signup.confirmation.title,
-    description: language.interactions.signup.confirmation.desc,
-    categories: [
-      {
-        title: language.interactions.signup.confirmation.name,
-        text: player[0],
-        inline: true,
-      },
-      {
-        title: language.interactions.signup.confirmation.weapon1,
-        text: player[2],
-        inline: true,
-      },
-      {
-        title: language.interactions.signup.confirmation.weapon2,
-        text: player[3],
-        inline: true,
-      },
-      {
-        title: language.interactions.signup.confirmation.role,
-        text: player[4],
-        inline: true,
-      },
-      {
-        title: language.interactions.signup.confirmation.level,
-        text: player[5],
-        inline: true,
-      },
-      {
-        title: language.interactions.signup.confirmation.gearscore,
-        text: player[6],
-        inline: true,
-      },
-    ],
-    buttons: row,
-  }));
-}
-
-async function editName(interaction, event, player, playerIndex) {
-  const channel = interaction.channel;
-  // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
-    guild: interaction.guild,
-    title: language.interactions.signup.edit.name_title,
-    description: language.interactions.signup.edit.name_desc,
-  }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', (msg, c) => {
-    updateSheet([0, msg.content], event, channel, player, playerIndex);
-  });
-}
-
-async function editWeapon1(interaction, event) {
-  const row = new MessageActionRow()
-      .addComponents(
-          new MessageSelectMenu()
-              .setCustomId('edit-weapon1'+event)
-              .setPlaceholder('Nothing selected')
-              .addOptions(weaponOptions),
-      );
-  // send message to select first Weapon
-  interaction.channel.send(await messageHandler.getRichTextExplicitDefault({
-    title: language.interactions.signup.edit.weapon1_title,
-    description: language.interactions.signup.edit.weapon1_desc,
-    buttons: row,
-  }));
-}
-
-async function editWeapon1Event(interaction) {
-  const value = interaction.values[0];
-
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  const players = playerData.values?playerData.values: [[]];
-  let player; let playerIndex; let i=0;
-  for (const p of players) {
-    if (p[1] === interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
-  updateSheet([2, value], interaction.customId.slice(12), interaction.channel, player, playerIndex);
-}
-
-async function editWeapon2(interaction, event) {
-  const row = new MessageActionRow()
-      .addComponents(
-          new MessageSelectMenu()
-              .setCustomId('edit-weapon2'+event)
-              .setPlaceholder('Nothing selected')
-              .addOptions(weaponOptions),
-      );
-  // send message to select first Weapon
-  interaction.channel.send(await messageHandler.getRichTextExplicitDefault({
-    title: language.interactions.signup.edit.weapon2_title,
-    description: language.interactions.signup.edit.weapon2_desc,
-    buttons: row,
-  }));
-}
-
-async function editWeapon2Event(interaction) {
-  const value = interaction.values[0];
-
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  const players = playerData.values?playerData.values: [[]];
-  let player; let playerIndex; let i=0;
-  for (const p of players) {
-    if (p[1] === interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
-  await updateSheet([3, value], interaction.customId.slice(12), interaction.channel, player, playerIndex);
-}
-
-async function editRole(interaction, event) {
-  const row = new MessageActionRow()
-      .addComponents(
-          new MessageSelectMenu()
-              .setCustomId('edit-role'+event)
-              .setPlaceholder('Nothing selected')
-              .addOptions(roleOptions),
-      );
-  // send message to select first Weapon
-  interaction.channel.send(await messageHandler.getRichTextExplicitDefault({
-    title: language.interactions.signup.edit.role_title,
-    description: language.interactions.signup.edit.role_desc,
-    buttons: row,
-  }));
-}
-
-async function editRoleEvent(interaction) {
-  const value = interaction.values[0];
-
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  const players = playerData.values?playerData.values: [[]];
-  let player; let playerIndex; let i=0;
-  for (const p of players) {
-    if (p[1] === interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
-  await updateSheet([4, value], interaction.customId.slice(9), interaction.channel, player, playerIndex);
-}
-
-async function editLevel(interaction, event, player, playerIndex, sendConfirmation) {
-  const channel = interaction.channel;
-  // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
-    guild: interaction.guild,
-    title: language.interactions.signup.edit.level_title,
-    description: language.interactions.signup.edit.level_desc,
-  }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', (msg, c) => {
-    updateSheet([5, msg.content], event, channel, player, playerIndex, sendConfirmation);
-  });
-}
-
-async function editGearscore(interaction, event, player, playerIndex) {
-  const channel = interaction.channel;
-  // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
-    guild: interaction.guild,
-    title: language.interactions.signup.edit.gearscore_title,
-    description: language.interactions.signup.edit.gearscore_desc,
-  }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', (msg, c) => {
-    updateSheet([6, msg.content], event, channel, player, playerIndex);
-  });
-}
-
-async function updateSheet(data, event, channel, player, index) {
-  player[data[0]]=data[1];
-  await updateSheetTotal(player, index);
-  sendConfirmationMessage(event, channel, player);
-}
-
-async function updateSheetTotal(data, index) {
-  await googleSheetsHandler.updateData(config.googleSheetsId, {range: `Players!A${index+2}:Z${index+2}`, values: [data]});
-}
-
 /**
  * Called when Sign out button was clicked
  * @param {ButtonInteraction} interaction
@@ -708,24 +446,18 @@ async function updateSheetTotal(data, index) {
 async function signout(interaction) {
   // retrieve user id from interaction member
   const userId = interaction.member.user.id;
-  const event = interaction.customId.slice(9);
+  const event = interaction.customId.slice('signout-1'.length);
+  console.log('User signout received', userId, event);
   // create or retrieve Direct Message channel
   const channel = await interaction.member.createDM();
   // retrieve Players data from google sheets
-  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, 'Players!A2:Z');
-  // if data is empty, .values is undefined and we create an empty array
-  const players = data.values?data.values:[[]];
-
-  // Finds Player Row by their user ID
-  const player = players.find((subarray)=>subarray[1] === userId);
+  const player = await sheetHelper.getRowFromSheet(userId);
   // If player already registered himself once
   if (player) {
     if (await sqlHandler.isSignedIn(event, userId)) {
       if (!await sqlHandler.signOut(event, userId)) {
-        await updateSignupMessage(event, player[4], player[0], false);
         // Send confirmation message to channel that user was signed out
         channel.send(await messageHandler.getRichTextExplicitDefault( {
-          guild: interaction.guild,
           title: dic.interactions.signout.error_title,
           description: dic.interactions.signout.error_desc,
           color: 0x00cc00,
@@ -735,6 +467,7 @@ async function signout(interaction) {
     }
   }
 
+  await updateSignupMessage(event, player[4], player[0], false);
   // Send confirmation message to channel that user was signed out
   channel.send(await messageHandler.getRichTextExplicitDefault( {
     guild: interaction.guild,
@@ -742,6 +475,7 @@ async function signout(interaction) {
     description: dic.interactions.signout.confirmation_desc,
     color: 0x00cc00,
   }));
+  console.log('User signed out', userId, event);
 }
 
 export default {Signup};

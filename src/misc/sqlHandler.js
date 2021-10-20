@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+import {people} from 'googleapis/build/src/apis/people';
 import mariadb from 'mariadb';
 import config from '../config';
 
@@ -18,11 +19,11 @@ const pool = mariadb.createPool({
 async function initDB() {
   let conn;
   try {
-    console.log('Start DB Connection');
     conn = await pool.getConnection();
     console.log('DB Connection established');
     await conn.query('CREATE TABLE IF NOT EXISTS `signup` (`event` VARCHAR(255), `userid` VARCHAR(255), PRIMARY KEY (`event`,`userid`))');
     await conn.query('CREATE TABLE IF NOT EXISTS `events` (`id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), `date` BIGINT, PRIMARY KEY(`id`), CONSTRAINT UC_Event UNIQUE (name,date))');
+    await conn.query('CREATE TABLE IF NOT EXISTS `messageEvents` (`eventId` VARCHAR(255), `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), PRIMARY KEY(`eventId`))');
   } catch (error) {
     throw error;
   } finally {
@@ -87,6 +88,26 @@ async function signOut(event, userid) {
   return returnValue;
 }
 
+async function getSignups(eventId) {
+  let conn;
+  let returnValue = [];
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(`SELECT userid FROM signup WHERE event = ${conn.escape(eventId)}`);
+    if (rows) {
+      for (const row of rows) {
+        returnValue.push(row.userid);
+      }
+    }
+  } catch (err) {
+    returnValue = [];
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
 async function deleteOldEvents(date) {
   let conn;
   let returnValue = true;
@@ -96,6 +117,7 @@ async function deleteOldEvents(date) {
     if (rows && rows[0]) {
       for (const row of rows) {
         await conn.query(`DELETE FROM signup WHERE event = ${conn.escape(row.id)}`);
+        await conn.query(`DELETE FROM messageEvents WHERE eventId = ${conn.escape(row.id)}`);
       }
     }
     await conn.query(`DELETE FROM events WHERE date < ${conn.escape(date)}`);
@@ -136,10 +158,74 @@ async function deleteEvent(eventName, eventDate) {
     if (rows && rows[0]) {
       await conn.query(`DELETE FROM events WHERE id = ${conn.escape(rows[0].id)}`);
       await conn.query(`DELETE FROM signup WHERE event = ${conn.escape(rows[0].id)}`);
+      await conn.query(`DELETE FROM messageEvents WHERE eventId = ${conn.escape(rows[0].id)}`);
       returnValue = true;
     }
   } catch (err) {
     returnValue = false;
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function getEventId(eventName, eventDate) {
+  let conn;
+  let returnValue = undefined;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(`SELECT id FROM events WHERE name = ${conn.escape(eventName)} AND date = ${conn.escape(eventDate)}`);
+    if (rows && rows[0]) {
+      returnValue = rows[0].id;
+    }
+  } catch (err) {
+    returnValue = undefined;
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+/**
+ *
+ * @param {string} eventId
+ * @param {string} messageId
+ * @param {string} channelId
+ * @param {string} guildId
+ */
+async function createMessageEvent(eventId, messageId, channelId, guildId) {
+  let conn;
+  let returnValue = false;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(`INSERT INTO messageEvents (eventId, messageId, channelId, guildId) VALUES (${conn.escape(eventId)}, ${conn.escape(messageId)}, ${conn.escape(channelId)}, ${conn.escape(guildId)})`);
+    returnValue = true;
+  } catch (err) {
+    returnValue = false;
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function getMessageEvent(eventId) {
+  let conn;
+  let returnValue = {};
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(`SELECT guildId, channelId, messageId FROM messageEvents WHERE eventId = ${conn.escape(eventId)}`);
+    if (rows && rows[0]) {
+      returnValue = {
+        guildId: rows[0].guildId,
+        channelId: rows[0].channelId,
+        messageId: rows[0].messageId,
+      };
+    }
+  } catch (err) {
+    returnValue = {};
     console.error(err);
   } finally {
     if (conn) await conn.end();
@@ -153,7 +239,11 @@ export default {
   isSignedIn,
   signIn,
   signOut,
+  getSignups,
   deleteOldEvents,
   createEvent,
   deleteEvent,
+  getEventId,
+  createMessageEvent,
+  getMessageEvent,
 };
