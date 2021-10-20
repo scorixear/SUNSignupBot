@@ -5,6 +5,7 @@
   "repository": "https://github.com/scorixear/SUNSignupBot/",
   "botPrefix": "&",
   "googleSheetsId": "your_sheets_id",
+  "googleSheetsRange": "Table!A1:G",
   "dbhost": "127.0.0.1",
   "dbuser": "username",
   "dbpassword": "password",
