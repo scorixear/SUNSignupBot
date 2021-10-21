@@ -26,8 +26,12 @@ function initialize() {
 
     // if key ways found
     if (key) {
-      // call provided function handler - will run asynchronously
-      buttons.get(key).call(undefined, interaction);
+      try {
+        // call provided function handler - will run asynchronously
+        buttons.get(key).call(undefined, interaction);
+      } catch (err) {
+        console.error(err);
+      }
       // set interaction as handled
       interaction.deferUpdate();
     }

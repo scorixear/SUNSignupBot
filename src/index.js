@@ -12,6 +12,13 @@ DiscordHandler.client.on('ready', ()=> {
 
 DiscordHandler.client.on('messageCreate', CmdHandler?CmdHandler.parseCommand: ()=>{});
 
+process.on('uncaughtException', (err) => {
+  console.error('Unhandled exception', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection', reason);
+});
+
 sqlHandler.initDB().then(() => {
   buttonActionHandler.initialize();
   interactionHandler.registerInteractions();

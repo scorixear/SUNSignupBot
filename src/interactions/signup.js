@@ -348,7 +348,7 @@ async function signupLevel(userId, channel, event, msg, isUpdate) {
   userRegistration.get(userId).level = msg.content;
 
   // send "get name" message to user
-  const message = channel.send(await messageHandler.getRichTextExplicitDefault({
+  const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.gearscore_title,
     description: language.interactions.signup.edit.gearscore_desc,
   }));
