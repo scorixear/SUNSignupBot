@@ -69,7 +69,7 @@ async function editWeapon1(channel, event) {
  */
 async function editWeapon1Event(interaction) {
   const value = interaction.values[0];
-
+  interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([2, value], interaction.customId.slice('edit-weapon1'.length), interaction.channel, player, playerIndex);
 }
@@ -101,7 +101,7 @@ async function editWeapon2(channel, event) {
  */
 async function editWeapon2Event(interaction) {
   const value = interaction.values[0];
-
+  interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([3, value], interaction.customId.slice('edit-weapon2'.length), interaction.channel, player, playerIndex);
 }
@@ -133,7 +133,7 @@ async function editRole(channel, event) {
  */
 async function editRoleEvent(interaction) {
   const value = interaction.values[0];
-
+  interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([4, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
 }
@@ -165,7 +165,7 @@ async function editGuild(channel, event) {
  */
 async function editGuildEvent(interaction) {
   const value = interaction.values[0];
-
+  interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([5, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
 }

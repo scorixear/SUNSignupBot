@@ -130,6 +130,7 @@ async function signupName(userId, event, msg, update) {
 async function signupWeapon1(interaction) {
   userRegistration.get(interaction.user.id).weapon1 = interaction.values[0];
   const event = interaction.customId.slice('signup-weapon1'.length);
+  interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -153,6 +154,7 @@ async function signupWeapon1(interaction) {
 async function signupWeapon1Update(interaction) {
   userRegistration.get(interaction.user.id).weapon1 = interaction.values[0];
   const event = interaction.customId.slice('signup-update-weapon1'.length);
+  interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -176,6 +178,7 @@ async function signupWeapon1Update(interaction) {
 async function signupWeapon2(interaction) {
   userRegistration.get(interaction.user.id).weapon2 = interaction.values[0];
   const event = interaction.customId.slice('signup-weapon2'.length);
+  interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -199,6 +202,7 @@ async function signupWeapon2(interaction) {
 async function signupWeapon2Update(interaction) {
   userRegistration.get(interaction.user.id).weapon2 = interaction.values[0];
   const event = interaction.customId.slice('signup-update-weapon2'.length);
+  interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -223,6 +227,7 @@ async function signupRole(interaction) {
   userRegistration.get(interaction.user.id).role = interaction.values[0];
   const event = interaction.customId.slice('signup-role'.length);
   const channel = interaction.channel;
+  interactionsHelper.deleteLastMessage(channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -247,6 +252,7 @@ async function signupRoleUpdate(interaction) {
   userRegistration.get(interaction.user.id).role = interaction.values[0];
   const event = interaction.customId.slice('signup-update-role'.length);
   const channel = interaction.channel;
+  interactionsHelper.deleteLastMessage(channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -271,6 +277,7 @@ async function signupGuild(interaction) {
   userRegistration.get(interaction.user.id).guild = interaction.values[0];
   const event = interaction.customId.slice('signup-guild'.length);
   const channel = interaction.channel;
+  interactionsHelper.deleteLastMessage(channel);
 
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -295,6 +302,7 @@ async function signupGuildUpdate(interaction) {
   userRegistration.get(interaction.user.id).guild = interaction.values[0];
   const event = interaction.customId.slice('signup-update-guild'.length);
   const channel = interaction.channel;
+  interactionsHelper.deleteLastMessage(channel);
 
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -388,12 +396,8 @@ async function signupConfirm(interaction) {
   const event = interaction.customId.slice('signup-confirmation'.length);
   // retrieve channel from interaction
   const channel = interaction.channel;
-  // get last message send from bot in this channel (the confirm button message)
-  const filteredMessages = (await channel.messages.fetch()).filter((message) => message.author.id === config.clientId);
-  // and delete it
-  if (filteredMessages.size > 0) {
-    filteredMessages.first().delete();
-  }
+
+  interactionsHelper.deleteLastMessage(channel);
 
   const player = await sheetHelper.getRowFromSheet(userId);
   // If player already registered himself once
@@ -420,6 +424,7 @@ async function signupConfirm(interaction) {
 async function signupEdit(interaction) {
   const channel = interaction.channel;
   const event = interaction.customId.slice('signup-edit'.length);
+  interactionsHelper.deleteLastMessage(channel);
 
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
 
@@ -454,12 +459,12 @@ async function signupEdit(interaction) {
       },
       {
         title: language.interactions.signup.confirmation.level,
-        text: '6️⃣ '+player[7],
+        text: '6️⃣ '+player[6],
         inline: true,
       },
       {
         title: language.interactions.signup.confirmation.gearscore,
-        text: '7️⃣ '+player[8],
+        text: '7️⃣ '+player[7],
         inline: true,
       },
       {
@@ -560,10 +565,9 @@ async function signout(interaction) {
         }));
         return;
       }
+      await updateSignupMessage(event, player[4], player[0], false);
     }
   }
-
-  await updateSignupMessage(event, player[4], player[0], false);
   // Send confirmation message to channel that user was signed out
   channel.send(await messageHandler.getRichTextExplicitDefault( {
     guild: interaction.guild,
