@@ -46,8 +46,8 @@ export default class Unavailable extends Command {
       const eventId = await sqlHandler.getEventId(args[0], eventDate);
       if (eventId) {
         const result = (await sqlHandler.getUnavailables(eventId))
-            .map((val, index, array)=> {
-              msg.guild.members.resolve(val).nickname;
+            .map((val)=> {
+              return msg.guild.members.resolve(val).nickname;
             })
             .join('\n');
         messageHandler.sendRichTextDefault({
