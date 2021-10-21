@@ -8,11 +8,15 @@ async function createMessageCollector(channel, message, description, action) {
   const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
   collector.next
       .then(async (msg) => {
-        message.delete();
+        try {
+          message.delete();
+        } catch (err) {}
         action(msg);
       })
       .catch(async (reason)=> {
-        message.delete();
+        try {
+          message.delete();
+        } catch (err) {}
         await messageHandler.sendRichTextDefaultExplicit({
           channel: channel,
           title: language.interactions.signup.error.timeout_title,
