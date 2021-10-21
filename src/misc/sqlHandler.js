@@ -24,6 +24,7 @@ async function initDB() {
     await conn.query('CREATE TABLE IF NOT EXISTS `signup` (`event` VARCHAR(255), `userid` VARCHAR(255), PRIMARY KEY (`event`,`userid`))');
     await conn.query('CREATE TABLE IF NOT EXISTS `events` (`id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), `date` BIGINT, PRIMARY KEY(`id`), CONSTRAINT UC_Event UNIQUE (name,date))');
     await conn.query('CREATE TABLE IF NOT EXISTS `messageEvents` (`eventId` VARCHAR(255), `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), PRIMARY KEY(`eventId`))');
+    await conn.query('CREATE TABLE IF NOT EXISTS `unavailable` (`eventId` VARCHAR(255), `userId` VARCHAR(255), PRIMARY KEY (`eventId`,`userId`))');
   } catch (error) {
     throw error;
   } finally {
@@ -108,28 +109,6 @@ async function getSignups(eventId) {
   return returnValue;
 }
 
-async function deleteOldEvents(date) {
-  let conn;
-  let returnValue = true;
-  try {
-    conn = await pool.getConnection();
-    const rows = await conn.query(`SELECT id FROM events WHERE date < ${conn.escape(date)}`);
-    if (rows && rows[0]) {
-      for (const row of rows) {
-        await conn.query(`DELETE FROM signup WHERE event = ${conn.escape(row.id)}`);
-        await conn.query(`DELETE FROM messageEvents WHERE eventId = ${conn.escape(row.id)}`);
-      }
-    }
-    await conn.query(`DELETE FROM events WHERE date < ${conn.escape(date)}`);
-  } catch (err) {
-    returnValue = false;
-    console.error(err);
-  } finally {
-    if (conn) await conn.end();
-  }
-  return returnValue;
-}
-
 async function createEvent(eventName, eventDate) {
   let conn;
   let returnValue = -1;
@@ -159,6 +138,7 @@ async function deleteEvent(eventName, eventDate) {
       await conn.query(`DELETE FROM events WHERE id = ${conn.escape(rows[0].id)}`);
       await conn.query(`DELETE FROM signup WHERE event = ${conn.escape(rows[0].id)}`);
       await conn.query(`DELETE FROM messageEvents WHERE eventId = ${conn.escape(rows[0].id)}`);
+      await conn.query(`DELETE FROM unavailable WHERE eventId = ${conn.escape(rows[0].id)}`);
       returnValue = true;
     }
   } catch (err) {
@@ -233,6 +213,76 @@ async function getMessageEvent(eventId) {
   return returnValue;
 }
 
+async function isUnavailable(eventId, userId) {
+  let conn;
+  let returnValue = false;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(`SELECT eventId FROM unavailable WHERE eventId = ${conn.escape(eventId)} AND userId = ${conn.escape(userId)}`);
+    if (rows && rows[0]) {
+      returnValue = true;
+    }
+  } catch (err) {
+    returnValue = false;
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function setUnavailable(eventId, userId) {
+  let conn;
+  let returnValue = false;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(`INSERT INTO unavailable (eventId, userId) VALUES(${conn.escape(eventId)}, ${conn.escape(userId)})`);
+    returnValue = true;
+  } catch (err) {
+    returnValue = false;
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function removeUnavailable(eventId, userId) {
+  let conn;
+  let returnValue = false;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(`DELETE FROM unavailable WHERE eventId = ${conn.escape(eventId)} AND userId = ${conn.escape(userId)}`);
+    returnValue = true;
+  } catch (err) {
+    returnValue = false;
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function getUnavailables(eventId) {
+  let conn;
+  let returnValue = [];
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(`SELECT userId FROM unavailable WHERE eventId = ${conn.escape(eventId)}`);
+    if (rows) {
+      for (const row of rows) {
+        returnValue.push(row.userId);
+      }
+    }
+  } catch (err) {
+    returnValue = [];
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
 
 export default {
   initDB,
@@ -240,10 +290,13 @@ export default {
   signIn,
   signOut,
   getSignups,
-  deleteOldEvents,
   createEvent,
   deleteEvent,
   getEventId,
   createMessageEvent,
   getMessageEvent,
+  isUnavailable,
+  setUnavailable,
+  removeUnavailable,
+  getUnavailables,
 };

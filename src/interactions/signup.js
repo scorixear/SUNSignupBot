@@ -5,7 +5,7 @@ import googleSheetsHandler from '../misc/googleSheetsHandler';
 import config from '../config';
 import {dic, dic as language, replaceArgs} from '../misc/languageHandler';
 import sqlHandler from '../misc/sqlHandler';
-import {updateSignupMessage} from '../commands/Moderation/signup';
+import {updateSignupMessage, updateUnavailable} from '../commands/Moderation/signup';
 import {weaponOptions, roleOptions, guildOptions} from './signupConfig';
 import editHandler from './editHandler';
 import sheetHelper from './sheetHelper';
@@ -45,7 +45,24 @@ class Signup {
     // called after selecting role from edit option
     buttonActionHandler.addButtonAction('signup-update-guild', signupGuildUpdate);
 
+    buttonActionHandler.addButtonAction('unavailable', unavailable);
+
     editHandler.init();
+  }
+}
+
+/**
+ * Called when Unavailable is clicked
+ * @param {ButtonInteraction} interaction
+ */
+async function unavailable(interaction) {
+  const event = interaction.customId.slice('unavailable'.length);
+  if (await sqlHandler.isUnavailable(event, interaction.member.user.id)) {
+    await sqlHandler.removeUnavailable(event, interaction.member.user.id);
+    updateUnavailable(event, false);
+  } else {
+    await sqlHandler.setUnavailable(event, interaction.member.user.id);
+    updateUnavailable(event, true);
   }
 }
 
@@ -405,6 +422,10 @@ async function signupConfirm(interaction) {
   // update database
     await sqlHandler.signIn(event, userId);
     await updateSignupMessage(event, player[4], player[0], true);
+    if (await sqlHandler.isUnavailable(event, userId)) {
+      await sqlHandler.removeUnavailable(event, userId);
+      await updateUnavailable(event, false);
+    }
     // send confirmation message that signup was successfull || might need catch around google sheets api call
     channel.send(await messageHandler.getRichTextExplicitDefault({
       guild: interaction.guild,
@@ -566,8 +587,13 @@ async function signout(interaction) {
         return;
       }
       await updateSignupMessage(event, player[4], player[0], false);
+      if (!(await sqlHandler.isUnavailable(event, userId))) {
+        await sqlHandler.setUnavailable(event, userId);
+        await updateUnavailable(event, true);
+      }
     }
   }
+
   // Send confirmation message to channel that user was signed out
   channel.send(await messageHandler.getRichTextExplicitDefault( {
     guild: interaction.guild,

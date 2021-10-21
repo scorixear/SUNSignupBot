@@ -41,6 +41,20 @@
         "title": "Event deleted",
         "desc": "Successfully deleted $0."
       }
+    },
+    "deletesignup": {
+      "description": "Retrieves unavailable users from an Event registered with the `$0signup` command",
+      "error": {
+        "sql_title": "Event not found",
+        "sql_desc": "Something went wrong. I could not find the event.",
+        "args_title": "Missing Arguments",
+        "args_desc": "There are Arguments missing. See `$0help unavailable`.",
+        "formatTitle": "Wrong Format",
+        "formatDesc": "Your Date and/or Time are in the wrong format.\nMake sure you follow DD.MM.YYYY HH:MM"
+      },
+      "success": {
+        "title": "Unavailable Players"
+      }
     }
   },
   "interactions": {

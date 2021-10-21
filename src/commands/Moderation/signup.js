@@ -44,6 +44,22 @@ export async function updateSignupMessage(eventId, role, name, signup) {
   }
 }
 
+export async function updateUnavailable(eventId, isUnavailable) {
+  const eventMessage = await sqlHandler.getMessageEvent(eventId);
+  const guild = await discordHandler.client.guilds.resolve(eventMessage.guildId);
+  if (guild) {
+    const channel = await guild.channels.resolve(eventMessage.channelId);
+    if (channel) {
+      const msg = await channel.messages.resolve(eventMessage.messageId);
+      if (msg) {
+        const embed = msg.embeds[0];
+        embed.fields[7].value = (parseInt(embed.fields[7].value)+(isUnavailable?1:-1)).toString();
+        msg.edit({embeds: [embed], components: msg.components});
+      }
+    }
+  }
+}
+
 function updateCategory(name, embed, index, categoryName, isSignup) {
   const embedName = embed.fields[index].name.slice(categoryName.length, embed.fields[index].name.length-2);
   let values;
@@ -149,6 +165,10 @@ export default class Signup extends Command {
                   .setCustomId('signout-1'+eventId)
                   .setLabel('Sign out')
                   .setStyle('DANGER'),
+              new MessageButton()
+                  .setCustomId('unavailable'+eventId)
+                  .setLabel('Unavailable')
+                  .setStyle('SECONDARY'),
           );
       // send Signup message
       /** @type {Message} */
@@ -189,6 +209,10 @@ export default class Signup extends Command {
           {
             title: 'Ranged (0):',
             inline: true,
+          },
+          {
+            title: 'Unavailable',
+            text: '0',
           },
         ],
         buttons: row,
