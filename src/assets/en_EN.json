@@ -42,7 +42,7 @@
         "desc": "Successfully deleted $0."
       }
     },
-    "deletesignup": {
+    "unavailable": {
       "description": "Retrieves unavailable users from an Event registered with the `$0signup` command",
       "error": {
         "sql_title": "Event not found",
