@@ -43,8 +43,8 @@ export default class Unavailable extends Command {
         });
         return;
       }
+      const eventId = await sqlHandler.getEventId(args[0], eventDate);
       if (eventId) {
-        const eventId = await sqlHandler.getEventId(args[0], eventDate);
         const result = (await sqlHandler.getUnavailables(eventId))
             .map((val, index, array)=> {
               msg.guild.members.resolve(val).nickname;
