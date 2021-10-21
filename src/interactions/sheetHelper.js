@@ -123,13 +123,18 @@ async function sendConfirmationMessage(event, channel, player) {
         inline: true,
       },
       {
-        title: language.interactions.signup.confirmation.level,
+        title: language.interactions.signup.confirmation.guild,
         text: player[5],
         inline: true,
       },
       {
-        title: language.interactions.signup.confirmation.gearscore,
+        title: language.interactions.signup.confirmation.level,
         text: player[6],
+        inline: true,
+      },
+      {
+        title: language.interactions.signup.confirmation.gearscore,
+        text: player[7],
         inline: true,
       },
     ],

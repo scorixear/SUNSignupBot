@@ -1,11 +1,12 @@
 import {ButtonInteraction, MessageSelectMenu, DMChannel, MessageActionRow} from 'discord.js';
 import messageHandler from '../misc/messageHandler';
 import {dic as language} from '../misc/languageHandler';
-import {weaponOptions, roleOptions} from './signupConfig';
+import {weaponOptions, roleOptions, guildOptions} from './signupConfig';
 import googleSheetsHandler from '../misc/googleSheetsHandler';
 import config from '../config';
 import sheetHelper from './sheetHelper';
 import buttonActionHandler from '../misc/buttonActionHandler';
+import interactionsHelper from './interactionsHelper';
 
 function init() {
   // called after selecting weapon 1 from single selection
@@ -14,6 +15,7 @@ function init() {
   buttonActionHandler.addButtonAction('edit-weapon2', editWeapon2Event);
   // called after selecting role from single selection
   buttonActionHandler.addButtonAction('edit-role', editRoleEvent);
+  buttonActionHandler.addButtonAction('edit-guild', editGuildEvent);
 }
 
 /**
@@ -25,14 +27,19 @@ function init() {
  */
 async function editName(channel, event, player, playerIndex) {
   // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
+  const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.name_title,
     description: language.interactions.signup.edit.name_desc,
   }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', async (msg, c) => {
-    await sheetHelper.updateCellInSheet([0, msg.content], event, channel, player, playerIndex);
-  });
+
+  interactionsHelper.createMessageCollector(
+      channel,
+      message,
+      language.interactions.signup.edit.error.name_timeout_desc,
+      async (msg)=>{
+        await sheetHelper.updateCellInSheet([0, msg.content], event, channel, player, playerIndex);
+      },
+  );
 }
 
 /**
@@ -63,17 +70,7 @@ async function editWeapon1(channel, event) {
 async function editWeapon1Event(interaction) {
   const value = interaction.values[0];
 
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
-  const players = playerData.values?playerData.values: [[]];
-  let player; let playerIndex; let i=0;
-  for (const p of players) {
-    if (p[1] === interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
+  const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([2, value], interaction.customId.slice('edit-weapon1'.length), interaction.channel, player, playerIndex);
 }
 
@@ -105,17 +102,7 @@ async function editWeapon2(channel, event) {
 async function editWeapon2Event(interaction) {
   const value = interaction.values[0];
 
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
-  const players = playerData.values?playerData.values: [[]];
-  let player; let playerIndex; let i=0;
-  for (const p of players) {
-    if (p[1] === interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
+  const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([3, value], interaction.customId.slice('edit-weapon2'.length), interaction.channel, player, playerIndex);
 }
 
@@ -147,19 +134,42 @@ async function editRole(channel, event) {
 async function editRoleEvent(interaction) {
   const value = interaction.values[0];
 
-  const playerData = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
-  const players = playerData.values?playerData.values: [[]];
-  let player; let playerIndex; let i=0;
-  for (const p of players) {
-    if (p[1] === interaction.user.id) {
-      player = p;
-      playerIndex = i;
-      break;
-    }
-    i++;
-  }
+  const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([4, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
 }
+
+/**
+ * Called to select Guild
+ * @param {DMChannel} channel
+ * @param {string} event
+ */
+async function editGuild(channel, event) {
+  const row = new MessageActionRow()
+      .addComponents(
+          new MessageSelectMenu()
+              .setCustomId('edit-guild'+event)
+              .setPlaceholder('Nothing selected')
+              .addOptions(guildOptions),
+      );
+  // send message to select first Weapon
+  channel.send(await messageHandler.getRichTextExplicitDefault({
+    title: language.interactions.signup.edit.guild_title,
+    description: language.interactions.signup.edit.guild_desc,
+    buttons: row,
+  }));
+}
+
+/**
+ * Called when Role was selected
+ * @param {SelectMenuInteraction} interaction
+ */
+async function editGuildEvent(interaction) {
+  const value = interaction.values[0];
+
+  const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
+  await sheetHelper.updateCellInSheet([5, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
+}
+
 
 /**
  * Called to select Level
@@ -170,14 +180,19 @@ async function editRoleEvent(interaction) {
  */
 async function editLevel(channel, event, player, playerIndex) {
   // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
+  const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.level_title,
     description: language.interactions.signup.edit.level_desc,
   }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', async (msg, c) => {
-    await sheetHelper.updateCellInSheet([5, msg.content], event, channel, player, playerIndex);
-  });
+
+  interactionsHelper.createMessageCollector(
+      channel,
+      message,
+      language.interactions.signup.edit.error.level_timeout_desc,
+      async (msg)=>{
+        await sheetHelper.updateCellInSheet([6, msg.content], event, channel, player, playerIndex);
+      },
+  );
 }
 
 /**
@@ -189,14 +204,19 @@ async function editLevel(channel, event, player, playerIndex) {
  */
 async function editGearscore(channel, event, player, playerIndex) {
   // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
+  const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.gearscore_title,
     description: language.interactions.signup.edit.gearscore_desc,
   }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', async (msg, c) => {
-    await sheetHelper.updateCellInSheet([6, msg.content], event, channel, player, playerIndex);
-  });
+
+  interactionsHelper.createMessageCollector(
+      channel,
+      message,
+      language.interactions.signup.edit.error.gearscore_timeout_desc,
+      async (msg)=>{
+        await sheetHelper.updateCellInSheet([7, msg.content], event, channel, player, playerIndex);
+      },
+  );
 }
 
 
@@ -206,6 +226,7 @@ export default {
   editWeapon1,
   editWeapon2,
   editRole,
+  editGuild,
   editLevel,
   editGearscore,
 };

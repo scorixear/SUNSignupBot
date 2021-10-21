@@ -54,6 +54,7 @@
         "weapon1": "First Weapon",
         "weapon2": "Second Weapon",
         "role": "Assigned Role",
+        "guild": "Ingame Guild",
         "level": "Current Level",
         "gearscore": "Current Gear Score",
         "success": {
@@ -72,12 +73,26 @@
         "weapon2_desc": "Pleased select your secondary Weapon",
         "role_title": "Role",
         "role_desc": "Please select your main role",
+        "guild_title": "Role",
+        "guild_desc": "Please select your ingame guild",
         "level_title": "Level",
         "level_desc": "Please enter your current Level",
         "gearscore_title": "Gear Score",
         "gearscore_desc": "Please enter your current Gear Score",
         "everything_title": "Everything",
-        "everything_desc": "Update every Information"
+        "everything_desc": "Update every Information",
+        "error": {
+          "name_timeout_desc": "You took too long to enter your name. Please click on `Edit` again.",
+          "level_timeout_desc": "You took too long to enter your level. Please click on `Edit` again.",
+          "gearscore_timeout_desc": "You took too long to enter your gear score. Please click on `Edit` again."
+        }
+      },
+      "error": {
+        "timeout_title": "Time Out reached!",
+        "reactTime_desc": "You took too long to select an emoji. Please click on `Edit` again.",
+        "name_timeout_desc": "You took too long to enter your name. Please sign up again!",
+        "level_timeout_desc": "You took too long to enter your level. Please sign up again!",
+        "gearscore_timeout_desc": "You took too long to enter your gear score. Please sign up again!"
       }
     },
     "signout": {

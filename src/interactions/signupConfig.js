@@ -62,3 +62,12 @@ export const roleOptions = [{
   value: 'Healer',
 }];
 
+export const guildOptions = [{
+  label: 'SUN',
+  value: 'SUN',
+},
+{
+  label: 'SUNs',
+  value: 'SUNs',
+}];
+

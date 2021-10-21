@@ -51,8 +51,9 @@ async function init() {
           weapon_1: player[2],
           weapon_2: player[3],
           role: player[4],
-          level: player[5],
-          gear_score: player[6],
+          guild: player[5],
+          level: player[6],
+          gear_score: player[7],
         });
       }
       res.status(200).send(returnBody);

@@ -6,9 +6,10 @@ import config from '../config';
 import {dic, dic as language, replaceArgs} from '../misc/languageHandler';
 import sqlHandler from '../misc/sqlHandler';
 import {updateSignupMessage} from '../commands/Moderation/signup';
-import {weaponOptions, roleOptions} from './signupConfig';
+import {weaponOptions, roleOptions, guildOptions} from './signupConfig';
 import editHandler from './editHandler';
 import sheetHelper from './sheetHelper';
+import interactionsHelper from './interactionsHelper';
 
 /**
  * Local Storage for ongoing Signups
@@ -39,6 +40,10 @@ class Signup {
     buttonActionHandler.addButtonAction('signup-update-weapon2', signupWeapon2Update);
     // called after selecting role from edit option
     buttonActionHandler.addButtonAction('signup-update-role', signupRoleUpdate);
+    // called after selecting role from edit option
+    buttonActionHandler.addButtonAction('signup-guild', signupGuild);
+    // called after selecting role from edit option
+    buttonActionHandler.addButtonAction('signup-update-guild', signupGuildUpdate);
 
     editHandler.init();
   }
@@ -75,16 +80,20 @@ async function signup(interaction) {
     // else if player didn't register yet
   } else {
     // send "get name" message to user
-    channel.send(await messageHandler.getRichTextExplicitDefault({
+    const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
       guild: interaction.guild,
       title: language.interactions.signup.edit.name_title,
       description: language.interactions.signup.edit.name_desc,
     }));
-    // start collector for one message with timeout of 50 seconds
-    const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-    collector.on('collect', (msg, c) => {
-      signupName(userId, event, msg, false);
-    });
+
+    interactionsHelper.createMessageCollector(
+        channel,
+        message,
+        language.interactions.signup.error.name_timeout_desc,
+        (msg)=> {
+          signupName(userId, event, msg, false);
+        },
+    );
   }
 }
 
@@ -215,15 +224,19 @@ async function signupRole(interaction) {
   const event = interaction.customId.slice('signup-role'.length);
   const channel = interaction.channel;
 
-  // send "get name" message to user
+  const row = new MessageActionRow()
+      .addComponents(
+          new MessageSelectMenu()
+              .setCustomId('signup-guild'+event)
+              .setPlaceholder('Nothing selected')
+              .addOptions(guildOptions),
+      );
+  // send message to select first Weapon
   channel.send(await messageHandler.getRichTextExplicitDefault({
-    title: language.interactions.signup.edit.level_title,
-    description: language.interactions.signup.edit.level_desc,
+    title: language.interactions.signup.edit.guild_title,
+    description: language.interactions.signup.edit.guild_desc,
+    buttons: row,
   }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', async (msg, c) => {
-    await signupLevel(interaction.user.id, interaction.channel, event, msg, false);
-  });
 }
 
 /**
@@ -235,15 +248,67 @@ async function signupRoleUpdate(interaction) {
   const event = interaction.customId.slice('signup-update-role'.length);
   const channel = interaction.channel;
 
-  // send "get name" message to user
+  const row = new MessageActionRow()
+      .addComponents(
+          new MessageSelectMenu()
+              .setCustomId('signup-update-guild'+event)
+              .setPlaceholder('Nothing selected')
+              .addOptions(guildOptions),
+      );
+  // send message to select first Weapon
   channel.send(await messageHandler.getRichTextExplicitDefault({
+    title: language.interactions.signup.edit.guild_title,
+    description: language.interactions.signup.edit.guild_desc,
+    buttons: row,
+  }));
+}
+
+/**
+ * Called when Guild was selected (new entry)
+ * @param {SelectMenuInteraction} interaction
+ */
+async function signupGuild(interaction) {
+  userRegistration.get(interaction.user.id).guild = interaction.values[0];
+  const event = interaction.customId.slice('signup-guild'.length);
+  const channel = interaction.channel;
+
+  // send "get name" message to user
+  const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.level_title,
     description: language.interactions.signup.edit.level_desc,
   }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', async (msg, c) => {
-    await signupLevel(interaction.user.id, interaction.channel, event, msg, true);
-  });
+  interactionsHelper.createMessageCollector(
+      channel,
+      message,
+      language.interactions.signup.error.level_timeout_desc,
+      async (msg)=> {
+        await signupLevel(interaction.user.id, interaction.channel, event, msg, false);
+      },
+  );
+}
+
+/**
+ * Called when Guild was selected (update entry)
+ * @param {SelectMenuInteraction} interaction
+ */
+async function signupGuildUpdate(interaction) {
+  userRegistration.get(interaction.user.id).guild = interaction.values[0];
+  const event = interaction.customId.slice('signup-update-guild'.length);
+  const channel = interaction.channel;
+
+  // send "get name" message to user
+  const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
+    title: language.interactions.signup.edit.level_title,
+    description: language.interactions.signup.edit.level_desc,
+  }));
+  interactionsHelper.createMessageCollector(
+      channel,
+      message,
+      language.interactions.signup.error.level_timeout_desc,
+      async (msg)=> {
+        await signupLevel(interaction.user.id, interaction.channel, event, msg, true);
+      },
+  );
 }
 
 /**
@@ -258,14 +323,19 @@ async function signupLevel(userId, channel, event, msg, isUpdate) {
   userRegistration.get(userId).level = msg.content;
 
   // send "get name" message to user
-  channel.send(await messageHandler.getRichTextExplicitDefault({
+  const message = channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.gearscore_title,
     description: language.interactions.signup.edit.gearscore_desc,
   }));
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-  collector.on('collect', async (msg, c) => {
-    await signupGearscore(userId, channel, event, msg, isUpdate);
-  });
+
+  interactionsHelper.createMessageCollector(
+      channel,
+      message,
+      language.interactions.signup.error.gearscore_timeout_desc,
+      async (msg)=> {
+        await signupGearscore(userId, channel, event, msg, isUpdate);
+      },
+  );
 }
 
 /**
@@ -285,7 +355,7 @@ async function signupGearscore(userId, channel, event, msg, isUpdate) {
   if (isUpdate) {
     // retrieve row index in sheet
     const playerIndex = await sheetHelper.getIndexFromSheet(userId);
-    await sheetHelper.updateRowInSheet([userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.level, userData.gearscore], playerIndex);
+    await sheetHelper.updateRowInSheet([userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore], playerIndex);
     console.log('Google Sheet User Updated', userId, event);
   } else {
     // append new Row to sheet
@@ -295,6 +365,7 @@ async function signupGearscore(userId, channel, event, msg, isUpdate) {
       userData.weapon1,
       userData.weapon2,
       userData.role,
+      userData.guild,
       userData.level,
       userData.gearscore]]});
     console.log('Google Sheet User Registered', userId, event);
@@ -304,7 +375,7 @@ async function signupGearscore(userId, channel, event, msg, isUpdate) {
   userRegistration.delete(userId);
 
   // send confirmation message about changed / registered information
-  await sheetHelper.sendConfirmationMessage(event, channel, [userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.level, userData.gearscore]);
+  await sheetHelper.sendConfirmationMessage(event, channel, [userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore]);
 }
 
 /**
@@ -377,18 +448,23 @@ async function signupEdit(interaction) {
         inline: true,
       },
       {
-        title: language.interactions.signup.confirmation.level,
+        title: language.interactions.signup.confirmation.guild,
         text: '5️⃣ '+player[5],
         inline: true,
       },
       {
+        title: language.interactions.signup.confirmation.level,
+        text: '6️⃣ '+player[7],
+        inline: true,
+      },
+      {
         title: language.interactions.signup.confirmation.gearscore,
-        text: '6️⃣ '+player[6],
+        text: '7️⃣ '+player[8],
         inline: true,
       },
       {
         title: language.interactions.signup.edit.everything_title,
-        text: '7️⃣ '+language.interactions.signup.edit.everything_desc,
+        text: '8️⃣ '+language.interactions.signup.edit.everything_desc,
         inline: true,
       },
     ],
@@ -397,6 +473,16 @@ async function signupEdit(interaction) {
 
   msg.awaitReactions({filter: (react, user)=>user.id !== config.clientId, max: 1, time: 60000})
       .then(async (collected) => {
+        msg.delete();
+        if (collected.size == 0) {
+          await channel.send(await messageHandler.getRichTextExplicitDefault({
+            title: language.interactions.signup.error.timeout_title,
+            description: language.interactions.signup.error.reactTime_desc,
+            color: 0xcc0000,
+          }));
+          return;
+        }
+
         // console.log(collected);
         switch (collected.firstKey()) {
           case '1️⃣':
@@ -412,31 +498,41 @@ async function signupEdit(interaction) {
             await editHandler.editRole(channel, event);
             break;
           case '5️⃣':
-            await editHandler.editLevel(channel, event, player, playerIndex);
+            await editHandler.editGuild(channel, event);
             break;
           case '6️⃣':
-            await editHandler.editGearscore(channel, event, player, playerIndex);
+            await editHandler.editLevel(channel, event, player, playerIndex);
             break;
           case '7️⃣':
-            channel.send(await messageHandler.getRichTextExplicitDefault({
+            await editHandler.editGearscore(channel, event, player, playerIndex);
+            break;
+          case '8️⃣':
+            const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
               title: language.interactions.signup.edit.name_title,
               description: language.interactions.signup.edit.name_desc,
             }));
-            const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
-            collector.on('collect', async (msg, c) => {
-              await signupName(interaction.user.id, event, msg, true);
-            });
+
+            interactionsHelper.createMessageCollector(
+                channel,
+                message,
+                language.interactions.signup.error.name_timeout_desc,
+                async (msg)=> {
+                  await signupName(interaction.user.id, event, msg, true);
+                },
+            );
             break;
         }
       });
-
-  await msg.react('1️⃣');
-  await msg.react('2️⃣');
-  await msg.react('3️⃣');
-  await msg.react('4️⃣');
-  await msg.react('5️⃣');
-  await msg.react('6️⃣');
-  await msg.react('7️⃣');
+  try {
+    await msg.react('1️⃣');
+    await msg.react('2️⃣');
+    await msg.react('3️⃣');
+    await msg.react('4️⃣');
+    await msg.react('5️⃣');
+    await msg.react('6️⃣');
+    await msg.react('7️⃣');
+    await msg.react('8️⃣');
+  } catch (err) {}
 }
 
 /**
