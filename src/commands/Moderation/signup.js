@@ -15,11 +15,11 @@ import sqlHandler from '../../misc/sqlHandler.js';
  */
 export async function updateSignupMessage(eventId, role, name, signup) {
   const eventMessage = await sqlHandler.getMessageEvent(eventId);
-  const guild = await discordHandler.client.guilds.resolve(eventMessage.guildId);
+  const guild = await discordHandler.client.guilds.cache.get(eventMessage.guildId);
   if (guild) {
-    const channel = await guild.channels.resolve(eventMessage.channelId);
+    const channel = await guild.channels.fetch(eventMessage.channelId);
     if (channel) {
-      const msg = await channel.messages.resolve(eventMessage.messageId);
+      const msg = await channel.messages.fetch(eventMessage.messageId);
       if (msg) {
         const embed = msg.embeds[0];
         const signupValue = parseInt(embed.fields[2].value);
