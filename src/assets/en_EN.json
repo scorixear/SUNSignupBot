@@ -39,7 +39,7 @@
       },
       "success": {
         "title": "Event deleted",
-        "desc": "Successfully deleted $0."
+        "desc": "Successfully deleted `$0`."
       }
     },
     "unavailable": {

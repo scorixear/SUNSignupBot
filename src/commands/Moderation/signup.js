@@ -5,6 +5,7 @@ import {dic as language, replaceArgs} from '../../misc/languageHandler.js';
 import messageHandler from '../../misc/messageHandler.js';
 import discordHandler from '../../misc/discordHandler.js';
 import sqlHandler from '../../misc/sqlHandler.js';
+import dateHandler from '../../misc/dateHandler.js';
 
 /**
  *
@@ -115,12 +116,14 @@ export default class Signup extends Command {
       // Estract channel from the guild cache
       /** @type { TextChannel } */
       const channel = msg.guild.channels.cache.get(args[0].substr(2, args[0].length - 3));
-      let eventDate;
+      let eventTimestamp;
+      let [dateString, timeString] = [];
       try {
-        const dateStrings = args[2].split('.');
-        const timeStrings = args[3].split(':');
-        eventDate = Math.floor(new Date(parseInt(dateStrings[2]), parseInt(dateStrings[1]), parseInt(dateStrings[0]), parseInt(timeStrings[0]), parseInt(timeStrings[1])).getTime() / 1000);
+        const eventDate = dateHandler.getUTCDateFromCETStrings(args[2], args[3]);
+        eventTimestamp = dateHandler.getUTCTimestampFromDate(eventDate);
+        [dateString, timeString] = dateHandler.getCESTStringFromDate(eventDate);
       } catch (err) {
+        console.error(err);
         messageHandler.sendRichTextDefault({
           msg: msg,
           title: language.commands.signup.error.formatTitle,
@@ -141,9 +144,9 @@ export default class Signup extends Command {
         return;
       }
 
-      const eventId = await sqlHandler.createEvent(args[1], eventDate);
+      const eventId = await sqlHandler.createEvent(args[1], eventTimestamp);
       if (eventId === -1) {
-        console.error('Failed to load event id with values: ', args[1], eventDate);
+        console.error('Failed to load event id with values: ', args[1], eventTimestamp);
         messageHandler.sendRichTextDefault({
           msg: msg,
           title: language.commands.signup.error.eventTitle,
@@ -180,12 +183,12 @@ export default class Signup extends Command {
         categories: [
           {
             title: 'Date',
-            text: args[2],
+            text: dateString,
             inline: true,
           },
           {
             title: 'Time',
-            text: args[3]+ ' UTC',
+            text: timeString,
             inline: true,
           },
           {
@@ -217,7 +220,7 @@ export default class Signup extends Command {
         buttons: row,
       });
       await sqlHandler.createMessageEvent(eventId, message.id, channel.id, message.guild.id);
-      console.log(`Created Event ${args[1]} ${eventDate}`);
+      console.log(`Created Event ${args[1]} ${eventTimestamp}`);
     } else {
       // otherwise, send error message that we are missing arguments
       messageHandler.sendRichTextDefault({

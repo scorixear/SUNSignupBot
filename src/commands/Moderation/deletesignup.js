@@ -1,10 +1,11 @@
 import {dic as language, replaceArgs} from '../../misc/languageHandler';
 import Command from '../command';
-import {Message} from 'discord.js';
+import {Message, TextChannel} from 'discord.js';
 import messageHandler from '../../misc/messageHandler';
 import sqlHandler from '../../misc/sqlHandler';
 import config from '../../config';
 import discordHandler from '../../misc/discordHandler';
+import dateHandler from '../../misc/dateHandler';
 
 export default class Deletesignup extends Command {
   constructor(category) {
@@ -29,11 +30,10 @@ export default class Deletesignup extends Command {
     }
 
     if (args.length === 3) {
-      let eventDate;
+      let eventTimestamp;
       try {
-        const dateStrings = args[1].split('.');
-        const timeStrings = args[2].split(':');
-        eventDate = Math.floor(new Date(parseInt(dateStrings[2]), parseInt(dateStrings[1]), parseInt(dateStrings[0]), parseInt(timeStrings[0]), parseInt(timeStrings[1])).getTime() / 1000);
+        const eventDate = dateHandler.getUTCDateFromCETStrings(args[1], args[2]);
+        eventTimestamp = dateHandler.getUTCTimestampFromDate(eventDate);
       } catch (err) {
         console.error(err);
         messageHandler.sendRichTextDefault({
@@ -44,28 +44,28 @@ export default class Deletesignup extends Command {
         });
         return;
       }
-      const eventId = await sqlHandler.getEventId(args[0], eventDate);
+      const eventId = await sqlHandler.getEventId(args[0], eventTimestamp);
       if (eventId) {
         const messageEvent = await sqlHandler.getMessageEvent(eventId);
-        const guild = await discordHandler.client.guilds.resolve(messageEvent.guildId);
+        const guild = await discordHandler.client.guilds.cache.get(messageEvent.guildId);
         if (guild) {
           /** @type {TextChannel} */
-          const channel = await guild.channels.resolve(messageEvent.channelId);
+          const channel = await guild.channels.fetch(messageEvent.channelId);
           if (channel) {
-            const msg = await channel.messages.resolve(messageEvent.messageId);
+            const msg = await channel.messages.fetch(messageEvent.messageId);
             if (msg) {
               await msg.delete();
             }
           }
         }
-        sqlHandler.deleteEvent(args[0], eventDate);
+        sqlHandler.deleteEvent(args[0], eventTimestamp);
         messageHandler.sendRichTextDefault({
           msg: msg,
           title: language.commands.deletesignup.success.title,
           description: replaceArgs(language.commands.deletesignup.success.desc, [args[0]]),
           color: 0x00cc00,
         });
-        console.log(`Deleted event ${args[0]} ${eventDate}`);
+        console.log(`Deleted event ${args[0]} ${eventTimestamp}`);
       } else {
         messageHandler.sendRichTextDefault({
           msg: msg,

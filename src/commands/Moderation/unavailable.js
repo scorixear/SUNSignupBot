@@ -4,6 +4,7 @@ import {Message} from 'discord.js';
 import messageHandler from '../../misc/messageHandler';
 import sqlHandler from '../../misc/sqlHandler';
 import config from '../../config';
+import dateHandler from '../../misc/dateHandler';
 
 export default class Unavailable extends Command {
   constructor(category) {
@@ -28,11 +29,10 @@ export default class Unavailable extends Command {
     }
 
     if (args.length === 3) {
-      let eventDate;
+      let eventTimestamp;
       try {
-        const dateStrings = args[1].split('.');
-        const timeStrings = args[2].split(':');
-        eventDate = Math.floor(new Date(parseInt(dateStrings[2]), parseInt(dateStrings[1]), parseInt(dateStrings[0]), parseInt(timeStrings[0]), parseInt(timeStrings[1])).getTime() / 1000);
+        const eventDate = dateHandler.getUTCDateFromCETStrings(args[1], args[2]);
+        eventTimestamp = dateHandler.getUTCTimestampFromDate(eventDate);
       } catch (err) {
         messageHandler.sendRichTextDefault({
           msg: msg,
@@ -42,11 +42,12 @@ export default class Unavailable extends Command {
         });
         return;
       }
-      const eventId = await sqlHandler.getEventId(args[0], eventDate);
+      const eventId = await sqlHandler.getEventId(args[0], eventTimestamp);
       if (eventId) {
         const result = (await sqlHandler.getUnavailables(eventId))
-            .map((val)=> {
-              return msg.guild.members.resolve(val).nickname;
+            .map(async (val)=> {
+              const guildMember = await msg.guild.members.fetch(val);
+              return guildMember.nickname?guildMember.nickname:guildMember.user.name;
             })
             .join('\n');
         messageHandler.sendRichTextDefault({
