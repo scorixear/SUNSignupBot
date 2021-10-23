@@ -1,6 +1,6 @@
 import config from '../../config.js';
 import Command from '../command.js';
-import {Message, MessageActionRow, MessageButton, TextChannel} from 'discord.js';
+import {Message, MessageActionRow, MessageButton, TextChannel, Permissions} from 'discord.js';
 import {dic as language, replaceArgs} from '../../misc/languageHandler.js';
 import messageHandler from '../../misc/messageHandler.js';
 import discordHandler from '../../misc/discordHandler.js';
@@ -96,7 +96,7 @@ export default class Signup extends Command {
     this.command = 'signup';
     this.description = () => language.commands.signup.description;
     this.example = 'signup #announcements "Everfall Push" 14.10.2021 12:00 "Sign up for Everfall Push"';
-    this.permissions = ['MANAGE_CHANNELS'];
+    this.permissions = ['MANAGE_MESSAGES'];
   }
   /**
    * Executes the command
