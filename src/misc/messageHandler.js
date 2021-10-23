@@ -88,7 +88,7 @@ async function sendRichTextExplicit(guild, channel, author, title, categories, c
 
   if (guild && author) {
     const guildMember = await guild.members.fetch(author);
-    richText.setFooter(guildMember.nickname, author.avatarURL());
+    richText.setFooter(guildMember.nickname?guildMember.nickname.toString():guildMember.user.username.toString(), author.avatarURL());
   }
 
   richText.setTimestamp(new Date());
@@ -153,12 +153,12 @@ async function getRichTextExplicit(guild, author, title, categories, color, imag
 
   if (guild && author) {
     const guildMember = await guild.members.fetch(author);
-    richText.setFooter(guildMember.nickname, author.avatarURL());
+    richText.setFooter(guildMember.nickname?guildMember.nickname.toString():guildMember.user.username.toString(), author.avatarURL());
   }
 
   richText.setTimestamp(new Date());
   if (url) {
-    richText.setURL(url);
+    richText.setURL(url.toString());
   }
 
   let returnValue = {embeds: [richText]};
