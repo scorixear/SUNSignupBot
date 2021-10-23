@@ -13,7 +13,6 @@ export default class Deletesignup extends Command {
     this.command = 'deletesignup';
     this.description = () => replaceArgs(language.commands.deletesignup.description, [config.botPrefix]);
     this.example = 'deletesignup "Everfall Push" 14.10.2021 12:00';
-    this.permissions = ['MANAGE_MESSAGES'];
   }
 
   /**

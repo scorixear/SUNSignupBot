@@ -96,7 +96,6 @@ export default class Signup extends Command {
     this.command = 'signup';
     this.description = () => language.commands.signup.description;
     this.example = 'signup #announcements "Everfall Push" 14.10.2021 12:00 "Sign up for Everfall Push"';
-    this.permissions = ['MANAGE_MESSAGES'];
   }
   /**
    * Executes the command

@@ -12,7 +12,6 @@ export default class Unavailable extends Command {
     this.command = 'unavailable';
     this.description = () => replaceArgs(language.commands.unavailable.description, [config.botPrefix]);
     this.example = 'unavailable "Everfall Push" 14.10.2021 12:00';
-    this.permissions = ['MANAGE_MESSAGES'];
   }
 
   /**
