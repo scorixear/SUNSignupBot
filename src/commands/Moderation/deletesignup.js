@@ -47,17 +47,16 @@ export default class Deletesignup extends Command {
       const eventId = await sqlHandler.getEventId(args[0], eventTimestamp);
       if (eventId) {
         const messageEvent = await sqlHandler.getMessageEvent(eventId);
-        const guild = await discordHandler.client.guilds.cache.get(messageEvent.guildId);
-        if (guild) {
-          /** @type {TextChannel} */
-          const channel = await guild.channels.fetch(messageEvent.channelId);
-          if (channel) {
-            const msg = await channel.messages.fetch(messageEvent.messageId);
-            if (msg) {
+        try {
+          const guild = await discordHandler.client.guilds.cache.get(messageEvent.guildId);
+          try {
+            const channel = await guild.channels.fetch(messageEvent.channelId);
+            try {
+              const msg = await channel.messages.fetch(messageEvent.messageId);
               await msg.delete();
-            }
-          }
-        }
+            } catch {}
+          } catch {}
+        } catch {}
         sqlHandler.deleteEvent(args[0], eventTimestamp);
         messageHandler.sendRichTextDefault({
           msg: msg,

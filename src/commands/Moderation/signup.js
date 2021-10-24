@@ -16,12 +16,12 @@ import dateHandler from '../../misc/dateHandler.js';
  */
 export async function updateSignupMessage(eventId, role, name, signup) {
   const eventMessage = await sqlHandler.getMessageEvent(eventId);
-  const guild = await discordHandler.client.guilds.cache.get(eventMessage.guildId);
-  if (guild) {
-    const channel = await guild.channels.fetch(eventMessage.channelId);
-    if (channel) {
-      const msg = await channel.messages.fetch(eventMessage.messageId);
-      if (msg) {
+  try {
+    const guild = await discordHandler.client.guilds.cache.get(eventMessage.guildId);
+    try {
+      const channel = await guild.channels.fetch(eventMessage.channelId);
+      try {
+        const msg = await channel.messages.fetch(eventMessage.messageId);
         const embed = msg.embeds[0];
         const signupValue = parseInt(embed.fields[2].value);
         embed.fields[2].value = (signupValue+(signup?1:-1)).toString();
@@ -40,9 +40,9 @@ export async function updateSignupMessage(eventId, role, name, signup) {
             break;
         }
         msg.edit({embeds: [embed], components: msg.components});
-      }
-    }
-  }
+      } catch {}
+    } catch {}
+  } catch {}
 }
 
 export async function updateUnavailable(eventId, isUnavailable) {
