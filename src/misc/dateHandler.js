@@ -65,7 +65,7 @@ function getCESTStringFromDate(date) {
   }
 
   const day = utcDate.getDate();
-  const month = utcDate.getMonth();
+  const month = utcDate.getMonth()+1;
   const year = utcDate.getFullYear();
   const hours = utcDate.getHours();
   const minutes = utcDate.getMinutes();

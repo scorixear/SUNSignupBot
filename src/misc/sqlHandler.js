@@ -22,7 +22,7 @@ async function initDB() {
     conn = await pool.getConnection();
     console.log('DB Connection established');
     await conn.query('CREATE TABLE IF NOT EXISTS `signup` (`event` VARCHAR(255), `userid` VARCHAR(255), PRIMARY KEY (`event`,`userid`))');
-    await conn.query('CREATE TABLE IF NOT EXISTS `events` (`id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), `date` BIGINT, PRIMARY KEY(`id`), CONSTRAINT UC_Event UNIQUE (name,date))');
+    await conn.query('CREATE TABLE IF NOT EXISTS `events` (`id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), `date` BIGINT, `is_closed` BIT DEFAULT 0, PRIMARY KEY(`id`), CONSTRAINT UC_Event UNIQUE (name,date))');
     await conn.query('CREATE TABLE IF NOT EXISTS `messageEvents` (`eventId` VARCHAR(255), `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), PRIMARY KEY(`eventId`))');
     await conn.query('CREATE TABLE IF NOT EXISTS `unavailable` (`eventId` VARCHAR(255), `userId` VARCHAR(255), PRIMARY KEY (`eventId`,`userId`))');
   } catch (error) {
@@ -170,6 +170,45 @@ async function getEventId(eventName, eventDate) {
 
 /**
  *
+ * @param {string} timestamp
+ * @return {Array<string>}
+ */
+async function findDeleteEvents(timestamp) {
+  let conn;
+  let returnValue = [];
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(`SELECT id FROM events WHERE date < ${conn.escape(timestamp)} AND is_closed = 0`);
+    if (rows) {
+      for (const row of rows) {
+        returnValue.push(row.id);
+      }
+    }
+  } catch (err) {
+    returnValue = [];
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function closeEvent(eventId) {
+  let conn;
+  let returnValue = false;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(`UPDATE events SET is_closed = 1 WHERE id = ${conn.escape(eventId)}`);
+    returnValue = true;
+  } catch (err) {
+    returnValue = false;
+    console.error(err);
+  }
+  return returnValue;
+}
+
+/**
+ *
  * @param {string} eventId
  * @param {string} messageId
  * @param {string} channelId
@@ -191,6 +230,11 @@ async function createMessageEvent(eventId, messageId, channelId, guildId) {
   return returnValue;
 }
 
+/**
+ *
+ * @param {string} eventId
+ * @return {{guildId: string, channelId: string, messageId: string}}
+ */
 async function getMessageEvent(eventId) {
   let conn;
   let returnValue = {};
@@ -293,6 +337,8 @@ export default {
   createEvent,
   deleteEvent,
   getEventId,
+  findDeleteEvents,
+  closeEvent,
   createMessageEvent,
   getMessageEvent,
   isUnavailable,
