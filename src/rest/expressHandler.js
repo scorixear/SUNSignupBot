@@ -14,12 +14,16 @@ async function init() {
     console.log('Request received', eventName, eventDate, eventTime);
     if (!eventName) {
       res.status(400).send('Missing query parameter "name"');
+      console.log('Request denied 400 - missing name');
       return;
     } else if (!eventDate) {
       res.status(400).send('Missing query parameter "date"');
+      console.log('Request denied 400 - missing date');
       return;
     } else if (!eventTime) {
       res.send(400).send('Missing query parameter "time"');
+      console.log('Request denied 400 - missing time');
+      return;
     }
 
     let eventTimestamp;
@@ -27,12 +31,14 @@ async function init() {
       const date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
       eventTimestamp = dateHandler.getUTCTimestampFromDate(date);
     } catch (err) {
+      console.log('Request denied 404 - date/time wrong format');
       res.status(400).send('"date" and/or "time" are in the wrong format. Expected is: DD.MM.YYYY HH:MM');
       return;
     }
 
     const eventId = await sqlHandler.getEventId(eventName, eventTimestamp);
     if (!eventId) {
+      console.log('Request denied 404 - Could not find Event');
       res.status(404).send('Could not find event.');
       return;
     }
@@ -58,8 +64,10 @@ async function init() {
         });
       }
       res.status(200).send(returnBody);
+      console.log('Request Success 200');
     } catch (err) {
       res.status(500).send('Something went wrong while retrieving data.');
+      console.log('Request denied 500 - internal error');
       console.error(err);
     }
   });
