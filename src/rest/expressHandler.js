@@ -11,7 +11,7 @@ async function init() {
     const eventName = req.query.name;
     const eventDate = req.query.date;
     const eventTime = req.query.time;
-
+    console.log('Request received', eventName, eventDate, eventTime);
     if (!eventName) {
       res.status(400).send('Missing query parameter "name"');
       return;
