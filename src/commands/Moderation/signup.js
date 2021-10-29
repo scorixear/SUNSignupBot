@@ -40,9 +40,9 @@ export async function updateSignupMessage(eventId, role, name, signup) {
             break;
         }
         msg.edit({embeds: [embed], components: msg.components});
-      } catch {}
-    } catch {}
-  } catch {}
+      } catch (err) {}
+    } catch (err) {}
+  } catch (err) {}
 }
 
 export async function updateUnavailable(eventId, isUnavailable) {

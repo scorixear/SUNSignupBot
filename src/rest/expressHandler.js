@@ -2,6 +2,7 @@ import express from 'express';
 import config from '../config';
 import googleSheetsHandler from '../misc/googleSheetsHandler';
 import sqlHandler from '../misc/sqlHandler';
+import dateHandler from '../misc/dateHandler';
 
 const app = express();
 
