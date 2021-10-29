@@ -20,17 +20,17 @@ async function init() {
     } else if (!eventTime) {
       res.send(400).send('Missing query parameter "time"');
     }
-    let eventDateTime;
+
+    let eventTimestamp;
     try {
-      const dateStrings = eventDate.split('.');
-      const timeStrings = eventTime.split(':');
-      eventDateTime = Math.floor(new Date(parseInt(dateStrings[2]), parseInt(dateStrings[1]), parseInt(dateStrings[0]), parseInt(timeStrings[0]), parseInt(timeStrings[1])).getTime() / 1000);
+      const date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
+      eventTimestamp = dateHandler.getUTCTimestampFromDate(date);
     } catch (err) {
       res.status(400).send('"date" and/or "time" are in the wrong format. Expected is: DD.MM.YYYY HH:MM');
       return;
     }
 
-    const eventId = await sqlHandler.getEventId(eventName, eventDateTime);
+    const eventId = await sqlHandler.getEventId(eventName, eventTimestamp);
     if (!eventId) {
       res.status(404).send('Could not find event.');
       return;

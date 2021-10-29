@@ -54,9 +54,9 @@ export default class Deletesignup extends Command {
             try {
               const msg = await channel.messages.fetch(messageEvent.messageId);
               await msg.delete();
-            } catch {}
-          } catch {}
-        } catch {}
+            } catch (err) {}
+          } catch (err) {}
+        } catch (err) {}
         sqlHandler.deleteEvent(args[0], eventTimestamp);
         messageHandler.sendRichTextDefault({
           msg: msg,
