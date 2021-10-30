@@ -9,7 +9,7 @@ import dateHandler from '../../misc/dateHandler';
 export default class Unavailable extends Command {
   constructor(category) {
     super(category);
-    this.usage = `unavailable <eventName> <date> <UTC Time>`;
+    this.usage = `unavailable <eventName> <date> <CET/CEST Time>`;
     this.command = 'unavailable';
     this.description = () => replaceArgs(language.commands.unavailable.description, [config.botPrefix]);
     this.example = 'unavailable "Everfall Push" 14.10.2021 12:00';

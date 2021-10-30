@@ -10,7 +10,7 @@ import dateHandler from '../../misc/dateHandler';
 export default class Deletesignup extends Command {
   constructor(category) {
     super(category);
-    this.usage = `deletesignup <eventName> <date> <UTC Time>`;
+    this.usage = `deletesignup <eventName> <date> <CET/CEST Time>`;
     this.command = 'deletesignup';
     this.description = () => replaceArgs(language.commands.deletesignup.description, [config.botPrefix]);
     this.example = 'deletesignup "Everfall Push" 14.10.2021 12:00';

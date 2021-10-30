@@ -91,7 +91,7 @@ export default class Signup extends Command {
    */
   constructor(category) {
     super(category);
-    this.usage = `signup <#channel> <eventName> <date> <UTC Time> <Description>`;
+    this.usage = `signup <#channel> <eventName> <date> <CET/CEST Time> <Description>`;
     this.command = 'signup';
     this.description = () => language.commands.signup.description;
     this.example = 'signup #announcements "Everfall Push" 14.10.2021 12:00 "Sign up for Everfall Push"';
