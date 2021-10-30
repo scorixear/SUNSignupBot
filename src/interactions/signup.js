@@ -84,10 +84,9 @@ async function unavailable(interaction) {
         return;
       }
       await updateSignupMessage(event);
-      await sqlHandler.setUnavailable(event, userId);
-      await updateUnavailable(event, true);
     }
-
+    await sqlHandler.setUnavailable(event, userId);
+    await updateUnavailable(event, true);
     console.log('User signed out', userId, event);
   }
 }
