@@ -173,7 +173,7 @@ async function editGuildEvent(interaction) {
   interaction.message.delete();
   // interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
-  await sheetHelper.updateCellInSheet([5, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
+  await sheetHelper.updateCellInSheet([5, value], interaction.customId.slice('edit-guild'.length), interaction.channel, player, playerIndex);
 }
 
 
