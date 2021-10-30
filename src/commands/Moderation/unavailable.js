@@ -44,11 +44,11 @@ export default class Unavailable extends Command {
       }
       const eventId = await sqlHandler.getEventId(args[0], eventTimestamp);
       if (eventId) {
-        const result = await Promise.all((await sqlHandler.getUnavailables(eventId))
+        const result = (await Promise.all((await sqlHandler.getUnavailables(eventId))
             .map(async (val)=> {
               const guildMember = await msg.guild.members.fetch(val);
               return guildMember.nickname?guildMember.nickname:guildMember.user.name;
-            }))
+            })))
             .join('\n');
         messageHandler.sendRichTextDefault({
           msg: msg,
