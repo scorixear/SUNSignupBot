@@ -2,8 +2,9 @@ import config from '../config';
 import messageHandler from '../misc/messageHandler';
 import {dic as language} from '../misc/languageHandler';
 import {DMChannel} from 'discord.js';
+import signup from './signup';
 
-async function createMessageCollector(channel, message, description, action) {
+async function createMessageCollector(channel, message, description, action, userId) {
   // start collector for one message with timeout of 50 seconds
   const collector = channel.createMessageCollector({filter: (m)=>m.author.id != config.clientId, max: 1, time: 50000});
   collector.next
@@ -13,6 +14,9 @@ async function createMessageCollector(channel, message, description, action) {
       })
       .catch(async (reason)=> {
         message.delete();
+        if (userId) {
+          signup.signupFinished(userId);
+        }
         await messageHandler.sendRichTextDefaultExplicit({
           channel: channel,
           title: language.interactions.signup.error.timeout_title,

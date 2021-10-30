@@ -33,7 +33,7 @@ function initialize() {
         console.error(err);
       }
       // set interaction as handled
-      interaction.deferUpdate();
+      setTimeout(()=> interaction.deferUpdate(), 2000);
     }
   });
 }

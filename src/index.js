@@ -45,18 +45,16 @@ sqlHandler.initDB().then(() => {
               console.error(`Couldn't delete message for event ${event}`, err);
               return;
             }
-          } catch {
+          } catch (err) {
             console.log('Couldn\'t find message for event '+event);
           }
-        } catch {
+        } catch (err) {
           console.log('Couldn\'t find channel for event '+event);
         }
-      } catch {
+      } catch (err) {
         console.log('Couldn\'t find guild for event '+event);
       }
       sqlHandler.closeEvent(event);
     }
   }, 1000*60);
 });
-
-

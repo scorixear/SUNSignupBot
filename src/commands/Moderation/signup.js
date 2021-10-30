@@ -6,6 +6,8 @@ import messageHandler from '../../misc/messageHandler.js';
 import discordHandler from '../../misc/discordHandler.js';
 import sqlHandler from '../../misc/sqlHandler.js';
 import dateHandler from '../../misc/dateHandler.js';
+import sheetHelper from '../../interactions/sheetHelper.js';
+
 
 /**
  *
@@ -14,7 +16,7 @@ import dateHandler from '../../misc/dateHandler.js';
  * @param {string} name
  * @param {Boolean} signup
  */
-export async function updateSignupMessage(eventId, role, name, signup) {
+export async function updateSignupMessage(eventId) {
   const eventMessage = await sqlHandler.getMessageEvent(eventId);
   try {
     const guild = await discordHandler.client.guilds.cache.get(eventMessage.guildId);
@@ -23,22 +25,37 @@ export async function updateSignupMessage(eventId, role, name, signup) {
       try {
         const msg = await channel.messages.fetch(eventMessage.messageId);
         const embed = msg.embeds[0];
-        const signupValue = parseInt(embed.fields[2].value);
-        embed.fields[2].value = (signupValue+(signup?1:-1)).toString();
-        switch (role) {
-          case 'Tank':
-            updateCategory(name, embed, 3, 'Tanks (', signup);
-            break;
-          case 'Healer':
-            updateCategory(name, embed, 4, 'Healers (', signup);
-            break;
-          case 'Melee':
-            updateCategory(name, embed, 5, 'Melees (', signup);
-            break;
-          case 'Range':
-            updateCategory(name, embed, 6, 'Ranged (', signup);
-            break;
+        const signups = await sqlHandler.getSignups(eventId);
+
+        const players = await sheetHelper.getSheetData();
+        const tanks = []; const healers = []; const melees = []; const ranged = [];
+        for (const userId of signups) {
+          const playerData = players.find((subarray)=> subarray[1]=== userId);
+          switch (playerData[4]) {
+            case 'Melee':
+              melees.push('<@'+userId+'>');
+              break;
+            case 'Tank':
+              tanks.push('<@'+userId+'>');
+              break;
+            case 'Healer':
+              healers.push('<@'+userId+'>');
+              break;
+            case 'Range':
+              ranged.push('<@'+userId+'>');
+              break;
+          }
         }
+
+        embed.fields[2].value = signups.length.toString();
+        embed.fields[3].name = `Tanks (${tanks.length}):`;
+        embed.fields[3].value = tanks.length>0?tanks.join('\n'):'\u200b';
+        embed.fields[4].name = `Healers (${healers.length}):`;
+        embed.fields[4].value = healers.length>0?healers.join('\n'):'\u200b';
+        embed.fields[5].name = `Melees (${melees.length}):`;
+        embed.fields[5].value = melees.length>0?melees.join('\n'):'\u200b';
+        embed.fields[6].name = `Ranged (${ranged.length}):`;
+        embed.fields[6].value = ranged.length>0?ranged.join('\n'):'\u200b';
         msg.edit({embeds: [embed], components: msg.components});
       } catch (err) {}
     } catch (err) {}
@@ -60,32 +77,6 @@ export async function updateUnavailable(eventId, isUnavailable) {
     }
   }
 }
-
-function updateCategory(name, embed, index, categoryName, isSignup) {
-  const embedName = embed.fields[index].name.slice(categoryName.length, embed.fields[index].name.length-2);
-  let values;
-  if (embed.fields[index].value === '\u200b') {
-    values = [];
-  } else {
-    values = embed.fields[index].value.split('\n');
-  }
-  inserOrRemoveFromArray(values, '- '+name, isSignup);
-  embed.fields[index].name = categoryName + (isSignup?parseInt(embedName)+1:parseInt(embedName)-1)+'):';
-  if (values.join('\n')==='') {
-    values.push('\u200b');
-  }
-  embed.fields[index].value = values.join('\n');
-}
-
-function inserOrRemoveFromArray(array, value, insert) {
-  const index = array.indexOf(value);
-  if (insert && index === -1) {
-    array.push(value);
-  } else if (!insert && index !== -1) {
-    array.splice(index, 1);
-  }
-}
-
 export default class Signup extends Command {
   /**
    *  Standard inizialization

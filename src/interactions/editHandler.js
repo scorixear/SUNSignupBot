@@ -24,8 +24,9 @@ function init() {
  * @param {string} event
  * @param {Array} player
  * @param {number} playerIndex
+ * @param {string} userId
  */
-async function editName(channel, event, player, playerIndex) {
+async function editName(channel, event, player, playerIndex, userId) {
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.name_title,
@@ -39,6 +40,7 @@ async function editName(channel, event, player, playerIndex) {
       async (msg)=>{
         await sheetHelper.updateCellInSheet([0, msg.content], event, channel, player, playerIndex);
       },
+      userId,
   );
 }
 
@@ -69,7 +71,8 @@ async function editWeapon1(channel, event) {
  */
 async function editWeapon1Event(interaction) {
   const value = interaction.values[0];
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([2, value], interaction.customId.slice('edit-weapon1'.length), interaction.channel, player, playerIndex);
 }
@@ -101,7 +104,8 @@ async function editWeapon2(channel, event) {
  */
 async function editWeapon2Event(interaction) {
   const value = interaction.values[0];
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([3, value], interaction.customId.slice('edit-weapon2'.length), interaction.channel, player, playerIndex);
 }
@@ -133,7 +137,8 @@ async function editRole(channel, event) {
  */
 async function editRoleEvent(interaction) {
   const value = interaction.values[0];
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([4, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
 }
@@ -165,7 +170,8 @@ async function editGuild(channel, event) {
  */
 async function editGuildEvent(interaction) {
   const value = interaction.values[0];
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
   await sheetHelper.updateCellInSheet([5, value], interaction.customId.slice('edit-role'.length), interaction.channel, player, playerIndex);
 }
@@ -177,8 +183,9 @@ async function editGuildEvent(interaction) {
  * @param {string} event
  * @param {Array<string>} player
  * @param {number} playerIndex
+ * @param {string} userId
  */
-async function editLevel(channel, event, player, playerIndex) {
+async function editLevel(channel, event, player, playerIndex, userId) {
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.level_title,
@@ -192,6 +199,7 @@ async function editLevel(channel, event, player, playerIndex) {
       async (msg)=>{
         await sheetHelper.updateCellInSheet([6, msg.content], event, channel, player, playerIndex);
       },
+      userId,
   );
 }
 
@@ -201,8 +209,9 @@ async function editLevel(channel, event, player, playerIndex) {
  * @param {string} event
  * @param {Array<string>} player
  * @param {Index} playerIndex
+ * @param {string} userId
  */
-async function editGearscore(channel, event, player, playerIndex) {
+async function editGearscore(channel, event, player, playerIndex, userId) {
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: language.interactions.signup.edit.gearscore_title,
@@ -216,6 +225,7 @@ async function editGearscore(channel, event, player, playerIndex) {
       async (msg)=>{
         await sheetHelper.updateCellInSheet([7, msg.content], event, channel, player, playerIndex);
       },
+      userId,
   );
 }
 

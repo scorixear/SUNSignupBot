@@ -15,6 +15,20 @@ import interactionsHelper from './interactionsHelper';
  * Local Storage for ongoing Signups
  */
 const userRegistration = new Map();
+
+const userSignup = new Set();
+
+function signupRunning(userId) {
+  return userSignup.has(userId);
+}
+
+function signupStarted(userId) {
+  userSignup.add(userId);
+}
+
+function signupFinished(userId) {
+  userSignup.delete(userId);
+}
 /**
  * Standard Interaction class for default initialization of ButtonActions
  */
@@ -73,6 +87,9 @@ async function unavailable(interaction) {
 async function signup(interaction) {
   // Retrieve user id from interaction
   const userId = interaction.member.user.id;
+  if (signupRunning(userId)) {
+    return;
+  }
   // create or retrieve Discord direct Message Channel between user and bot
   /** @type{DMChannel} */
   const channel = await interaction.member.createDM();
@@ -92,10 +109,12 @@ async function signup(interaction) {
       }));
       // else sign up user
     } else {
+      signupStarted(userId);
       await sheetHelper.sendConfirmationMessage(event, channel, player);
     }
     // else if player didn't register yet
   } else {
+    signupStarted(userId);
     // send "get name" message to user
     const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
       guild: interaction.guild,
@@ -110,6 +129,7 @@ async function signup(interaction) {
         (msg)=> {
           signupName(userId, event, msg, false);
         },
+        userId,
     );
   }
 }
@@ -147,7 +167,8 @@ async function signupName(userId, event, msg, update) {
 async function signupWeapon1(interaction) {
   userRegistration.get(interaction.user.id).weapon1 = interaction.values[0];
   const event = interaction.customId.slice('signup-weapon1'.length);
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -171,7 +192,8 @@ async function signupWeapon1(interaction) {
 async function signupWeapon1Update(interaction) {
   userRegistration.get(interaction.user.id).weapon1 = interaction.values[0];
   const event = interaction.customId.slice('signup-update-weapon1'.length);
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -195,7 +217,8 @@ async function signupWeapon1Update(interaction) {
 async function signupWeapon2(interaction) {
   userRegistration.get(interaction.user.id).weapon2 = interaction.values[0];
   const event = interaction.customId.slice('signup-weapon2'.length);
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -219,7 +242,8 @@ async function signupWeapon2(interaction) {
 async function signupWeapon2Update(interaction) {
   userRegistration.get(interaction.user.id).weapon2 = interaction.values[0];
   const event = interaction.customId.slice('signup-update-weapon2'.length);
-  interactionsHelper.deleteLastMessage(interaction.channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(interaction.channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -244,7 +268,8 @@ async function signupRole(interaction) {
   userRegistration.get(interaction.user.id).role = interaction.values[0];
   const event = interaction.customId.slice('signup-role'.length);
   const channel = interaction.channel;
-  interactionsHelper.deleteLastMessage(channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -269,7 +294,8 @@ async function signupRoleUpdate(interaction) {
   userRegistration.get(interaction.user.id).role = interaction.values[0];
   const event = interaction.customId.slice('signup-update-role'.length);
   const channel = interaction.channel;
-  interactionsHelper.deleteLastMessage(channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(channel);
 
   const row = new MessageActionRow()
       .addComponents(
@@ -294,7 +320,8 @@ async function signupGuild(interaction) {
   userRegistration.get(interaction.user.id).guild = interaction.values[0];
   const event = interaction.customId.slice('signup-guild'.length);
   const channel = interaction.channel;
-  interactionsHelper.deleteLastMessage(channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(channel);
 
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -308,6 +335,7 @@ async function signupGuild(interaction) {
       async (msg)=> {
         await signupLevel(interaction.user.id, interaction.channel, event, msg, false);
       },
+      interaction.user.id,
   );
 }
 
@@ -319,7 +347,8 @@ async function signupGuildUpdate(interaction) {
   userRegistration.get(interaction.user.id).guild = interaction.values[0];
   const event = interaction.customId.slice('signup-update-guild'.length);
   const channel = interaction.channel;
-  interactionsHelper.deleteLastMessage(channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(channel);
 
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -333,6 +362,7 @@ async function signupGuildUpdate(interaction) {
       async (msg)=> {
         await signupLevel(interaction.user.id, interaction.channel, event, msg, true);
       },
+      interaction.user.id,
   );
 }
 
@@ -360,6 +390,7 @@ async function signupLevel(userId, channel, event, msg, isUpdate) {
       async (msg)=> {
         await signupGearscore(userId, channel, event, msg, isUpdate);
       },
+      userId,
   );
 }
 
@@ -414,26 +445,30 @@ async function signupConfirm(interaction) {
   // retrieve channel from interaction
   const channel = interaction.channel;
 
-  interactionsHelper.deleteLastMessage(channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(channel);
 
   const player = await sheetHelper.getRowFromSheet(userId);
   // If player already registered himself once
   if (player) {
   // update database
-    await sqlHandler.signIn(event, userId);
-    await updateSignupMessage(event, player[4], player[0], true);
-    if (await sqlHandler.isUnavailable(event, userId)) {
-      await sqlHandler.removeUnavailable(event, userId);
-      await updateUnavailable(event, false);
+    const success = await sqlHandler.signIn(event, userId);
+    if (success) {
+      await updateSignupMessage(event);
+      if (await sqlHandler.isUnavailable(event, userId)) {
+        await sqlHandler.removeUnavailable(event, userId);
+        await updateUnavailable(event, false);
+      }
+      // send confirmation message that signup was successfull || might need catch around google sheets api call
+      channel.send(await messageHandler.getRichTextExplicitDefault({
+        guild: interaction.guild,
+        title: language.interactions.signup.confirmation.success.title,
+        description: language.interactions.signup.confirmation.success.desc,
+        color: 0x00cc00,
+      }));
+      console.log('User signed up', userId, event);
     }
-    // send confirmation message that signup was successfull || might need catch around google sheets api call
-    channel.send(await messageHandler.getRichTextExplicitDefault({
-      guild: interaction.guild,
-      title: language.interactions.signup.confirmation.success.title,
-      description: language.interactions.signup.confirmation.success.desc,
-      color: 0x00cc00,
-    }));
-    console.log('User signed up', userId, event);
+    signupFinished(userId);
   }
 }
 
@@ -445,7 +480,8 @@ async function signupConfirm(interaction) {
 async function signupEdit(interaction) {
   const channel = interaction.channel;
   const event = interaction.customId.slice('signup-edit'.length);
-  interactionsHelper.deleteLastMessage(channel);
+  interaction.message.delete();
+  // interactionsHelper.deleteLastMessage(channel);
 
   const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
 
@@ -501,6 +537,7 @@ async function signupEdit(interaction) {
       .then(async (collected) => {
         msg.delete();
         if (collected.size == 0) {
+          signupFinished(interaction.user.id);
           await channel.send(await messageHandler.getRichTextExplicitDefault({
             title: language.interactions.signup.error.timeout_title,
             description: language.interactions.signup.error.reactTime_desc,
@@ -512,7 +549,7 @@ async function signupEdit(interaction) {
         // console.log(collected);
         switch (collected.firstKey()) {
           case '1️⃣':
-            await editHandler.editName(channel, event, player, playerIndex);
+            await editHandler.editName(channel, event, player, playerIndex, interaction.user.id);
             break;
           case '2️⃣':
             await editHandler.editWeapon1(channel, event);
@@ -527,10 +564,10 @@ async function signupEdit(interaction) {
             await editHandler.editGuild(channel, event);
             break;
           case '6️⃣':
-            await editHandler.editLevel(channel, event, player, playerIndex);
+            await editHandler.editLevel(channel, event, player, playerIndex, interaction.user.id);
             break;
           case '7️⃣':
-            await editHandler.editGearscore(channel, event, player, playerIndex);
+            await editHandler.editGearscore(channel, event, player, playerIndex, interaction.user.id);
             break;
           case '8️⃣':
             const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -545,6 +582,7 @@ async function signupEdit(interaction) {
                 async (msg)=> {
                   await signupName(interaction.user.id, event, msg, true);
                 },
+                interaction.user.id,
             );
             break;
         }
@@ -568,6 +606,9 @@ async function signupEdit(interaction) {
 async function signout(interaction) {
   // retrieve user id from interaction member
   const userId = interaction.member.user.id;
+  if (signupRunning(userId)) {
+    return;
+  }
   const event = interaction.customId.slice('signout-1'.length);
   console.log('User signout received', userId, event);
   // create or retrieve Direct Message channel
@@ -586,7 +627,7 @@ async function signout(interaction) {
         }));
         return;
       }
-      await updateSignupMessage(event, player[4], player[0], false);
+      await updateSignupMessage(event);
       if (!(await sqlHandler.isUnavailable(event, userId))) {
         await sqlHandler.setUnavailable(event, userId);
         await updateUnavailable(event, true);
@@ -604,4 +645,9 @@ async function signout(interaction) {
   console.log('User signed out', userId, event);
 }
 
-export default {Signup};
+export default {
+  Signup,
+  signupRunning,
+  signupStarted,
+  signupFinished,
+};

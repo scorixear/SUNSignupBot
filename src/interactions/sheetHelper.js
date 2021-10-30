@@ -19,6 +19,15 @@ async function getRowFromSheet(userId) {
   return player;
 }
 
+async function getSheetData() {
+  // retrieve Players data from signup sheet
+  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
+  // if data is empty, .values is missing and we initialize with empty array
+  const fullSheetArray = data.values?data.values:[[]];
+
+  return fullSheetArray;
+}
+
 /**
  * Retrieves the Row Index of the given user id
  * @param {string} userId
@@ -144,6 +153,7 @@ async function sendConfirmationMessage(event, channel, player) {
 
 export default {
   getRowFromSheet,
+  getSheetData,
   getIndexFromSheet,
   getIndexAndRowFromSheet,
   updateCellInSheet,
