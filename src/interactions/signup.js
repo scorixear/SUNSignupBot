@@ -70,13 +70,25 @@ class Signup {
  * @param {ButtonInteraction} interaction
  */
 async function unavailable(interaction) {
+  const userId = interaction.member.user.id;
   const event = interaction.customId.slice('unavailable'.length);
-  if (await sqlHandler.isUnavailable(event, interaction.member.user.id)) {
-    await sqlHandler.removeUnavailable(event, interaction.member.user.id);
+  if (await sqlHandler.isUnavailable(event, userId)) {
+    await sqlHandler.removeUnavailable(event, userId);
     updateUnavailable(event, false);
   } else {
-    await sqlHandler.setUnavailable(event, interaction.member.user.id);
-    updateUnavailable(event, true);
+    if (signupRunning(userId)) {
+      return;
+    }
+    if (await sqlHandler.isSignedIn(event, userId)) {
+      if (!await sqlHandler.signOut(event, userId)) {
+        return;
+      }
+      await updateSignupMessage(event);
+      await sqlHandler.setUnavailable(event, userId);
+      await updateUnavailable(event, true);
+    }
+
+    console.log('User signed out', userId, event);
   }
 }
 
@@ -614,26 +626,24 @@ async function signout(interaction) {
   // create or retrieve Direct Message channel
   const channel = await interaction.member.createDM();
   // retrieve Players data from google sheets
-  const player = await sheetHelper.getRowFromSheet(userId);
-  // If player already registered himself once
-  if (player) {
-    if (await sqlHandler.isSignedIn(event, userId)) {
-      if (!await sqlHandler.signOut(event, userId)) {
-        // Send confirmation message to channel that user was signed out
-        channel.send(await messageHandler.getRichTextExplicitDefault( {
-          title: dic.interactions.signout.error_title,
-          description: dic.interactions.signout.error_desc,
-          color: 0x00cc00,
-        }));
-        return;
-      }
-      await updateSignupMessage(event);
-      if (!(await sqlHandler.isUnavailable(event, userId))) {
-        await sqlHandler.setUnavailable(event, userId);
-        await updateUnavailable(event, true);
-      }
+
+  if (await sqlHandler.isSignedIn(event, userId)) {
+    if (!await sqlHandler.signOut(event, userId)) {
+      // Send confirmation message to channel that user was signed out
+      channel.send(await messageHandler.getRichTextExplicitDefault( {
+        title: dic.interactions.signout.error_title,
+        description: dic.interactions.signout.error_desc,
+        color: 0x00cc00,
+      }));
+      return;
+    }
+    await updateSignupMessage(event);
+    if (!(await sqlHandler.isUnavailable(event, userId))) {
+      await sqlHandler.setUnavailable(event, userId);
+      await updateUnavailable(event, true);
     }
   }
+
 
   // Send confirmation message to channel that user was signed out
   channel.send(await messageHandler.getRichTextExplicitDefault( {

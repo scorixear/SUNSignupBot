@@ -30,19 +30,26 @@ export async function updateSignupMessage(eventId) {
         const players = await sheetHelper.getSheetData();
         const tanks = []; const healers = []; const melees = []; const ranged = [];
         for (const userId of signups) {
+          const member = await guild.members.fetch(userId);
+          let username;
+          if (member) {
+            username = member.nickname ? member.nickname:member.user.username;
+          } else {
+            username = playerData[0];
+          }
           const playerData = players.find((subarray)=> subarray[1]=== userId);
           switch (playerData[4]) {
             case 'Melee':
-              melees.push('<@'+userId+'>');
+              melees.push(username);
               break;
             case 'Tank':
-              tanks.push('<@'+userId+'>');
+              tanks.push(username);
               break;
             case 'Healer':
-              healers.push('<@'+userId+'>');
+              healers.push(username);
               break;
             case 'Range':
-              ranged.push('<@'+userId+'>');
+              ranged.push(username);
               break;
           }
         }
