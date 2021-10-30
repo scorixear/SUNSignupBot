@@ -47,7 +47,7 @@ export default class Unavailable extends Command {
         const result = (await Promise.all((await sqlHandler.getUnavailables(eventId))
             .map(async (val)=> {
               const guildMember = await msg.guild.members.fetch(val.toString());
-              return guildMember.nickname?guildMember.nickname:guildMember.user.name;
+              return guildMember.nickname?guildMember.nickname:guildMember.user.username;
             })))
             .join('\n');
         messageHandler.sendRichTextDefault({
