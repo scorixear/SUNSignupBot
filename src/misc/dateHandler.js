@@ -21,8 +21,8 @@ function isCEST(date) {
   const dateTime = date.getTime();
   const cestDateStart = new Date();
   const cestDateFinish = new Date();
-  cestDateStart.setTime(Date.parse('29 March '+date.getFullYear() + ' 02:00:00 GMT+0100'));
-  cestDateFinish.setTime(Date.parse('25 October '+date.getFullYear() + ' 03:00:00 GMT+0200'));
+  cestDateStart.setTime(Date.parse('27 March '+date.getFullYear() + ' 02:00:00 GMT+0100'));
+  cestDateFinish.setTime(Date.parse('31 October '+date.getFullYear() + ' 03:00:00 GMT+0200'));
   const cestDateStartTime = cestDateStart.getTime();
   const cestDateFinishTime = cestDateFinish.getTime();
 
