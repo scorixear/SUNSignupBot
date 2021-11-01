@@ -1,7 +1,7 @@
 export const weaponOptions = [
   {
     label: 'Sword and Shield',
-    value: 'Sword',
+    value: 'Sword and Shield',
   },
   {
     label: 'Rapier',
