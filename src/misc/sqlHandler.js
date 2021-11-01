@@ -203,6 +203,33 @@ async function closeEvent(eventId) {
   } catch (err) {
     returnValue = false;
     console.error(err);
+  } finally {
+    if (conn) await conn.end();
+  }
+  return returnValue;
+}
+
+async function getEvents(includeClosed) {
+  let conn;
+  let returnValue = [];
+  try {
+    conn = await pool.getConnection();
+    let rows;
+    if (includeClosed) {
+      rows = await conn.query(`SELECT name, date FROM events`);
+    } else {
+      rows = await conn.query(`SELECT name, date FROM events WHERE is_closed = 0`);
+    }
+    if (rows) {
+      for (const row of rows) {
+        returnValue.push({name: row.name, date: row.date});
+      }
+    }
+  } catch (err) {
+    returnValue = [];
+    console.error(err);
+  } finally {
+    if (conn) await conn.end();
   }
   return returnValue;
 }
@@ -339,6 +366,7 @@ export default {
   getEventId,
   findDeleteEvents,
   closeEvent,
+  getEvents,
   createMessageEvent,
   getMessageEvent,
   isUnavailable,
