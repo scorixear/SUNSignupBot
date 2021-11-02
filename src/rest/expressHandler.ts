@@ -42,7 +42,7 @@ export default class ExpressHandler {
       return;
     }
   
-    let eventTimestamp: string;
+    let eventTimestamp: number;
     try {
       const date: Date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
       eventTimestamp = dateHandler.getUTCTimestampFromDate(date);
@@ -52,7 +52,7 @@ export default class ExpressHandler {
       return;
     }
   
-    const eventId: string = await this.sqlHandler.getEventId(eventName, eventTimestamp);
+    const eventId: string = await this.sqlHandler.getEventId(eventName, eventTimestamp.toString());
     if (!eventId) {
       console.log('Request denied 404 - Could not find Event');
       res.status(404).send('Could not find event.');

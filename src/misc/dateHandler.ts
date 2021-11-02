@@ -1,10 +1,4 @@
-/**
- *
- * @param {string} date
- * @param {string} time
- * @return {[Date, boolean]}
- */
-function getUTCDateFromCETStrings(date, time) {
+ function getUTCDateFromCETStrings(date: string, time: string) {
   const dateStrings = date.split('.');
   const [hours, minutes] = time.split(':');
 
@@ -17,7 +11,7 @@ function getUTCDateFromCETStrings(date, time) {
   return serverDate;
 }
 
-function isCEST(date) {
+function isCEST(date: Date) {
   const dateTime = date.getTime();
   const cestDateStart = new Date();
   const cestDateFinish = new Date();
@@ -29,31 +23,15 @@ function isCEST(date) {
   return dateTime >= cestDateStartTime && dateTime <= cestDateFinishTime;
 }
 
-/**
- *
- * @param {Date} date
- * @return {number}
- */
-function getUTCTimestampFromDate(date) {
+function getUTCTimestampFromDate(date: Date) {
   return Math.floor(date.getTime() / 1000);
 }
 
-
-/**
- *
- * @param {number} timestamp
- * @return {Date}
- */
-function getDateFromUTCTimestamp(timestamp) {
+function getDateFromUTCTimestamp(timestamp: number) {
   return new Date(timestamp*1000);
 }
 
-/**
- *
- * @param {Date} date
- * @return {[string, string]}
- */
-function getCESTStringFromDate(date) {
+function getCESTStringFromDate(date: Date) {
   const utcDate = new Date(date.getTime() + date.getTimezoneOffset()*60*1000);
   let suffix;
   if (isCEST(date)) {

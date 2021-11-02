@@ -1,14 +1,32 @@
 import DiscordHandler from './misc/discordHandler';
-import CmdHandler from './misc/commandHandler';
+import GoogleSheetsHandler from './misc/googleSheetsHandler';
 import config from './config';
-import interactionHandler from './misc/interactionHandler';
+import InteractionHandler from './misc/interactionHandler';
 import SqlHandler from './misc/sqlHandler';
 import ExpressHandler from './rest/expressHandler';
 import dateHandler from './misc/dateHandler';
 import { Message, TextChannel } from 'discord.js';
+import dotenv from 'dotenv';
+import { LanguageHandler } from './misc/languageHandler';
 
-DiscordHandler.client.on('messageCreate', CmdHandler?CmdHandler.parseCommand: ()=>{});
-DiscordHandler.client.on('interaction', interactionHandler.handle);
+// initialize configuration
+dotenv.config();
+
+declare global {
+  var discordHandler: DiscordHandler;
+  var sqlHandler: SqlHandler;
+  var googleSheetsHandler: GoogleSheetsHandler;
+  var languageHandler: LanguageHandler;
+}
+global.discordHandler = new DiscordHandler();
+global.sqlHandler = new SqlHandler();
+global.googleSheetsHandler = new GoogleSheetsHandler();
+global.languageHandler = new LanguageHandler();
+const interactionHandler: InteractionHandler = new InteractionHandler();
+
+discordHandler.client.on('interaction', interactionHandler.handle);
+
+
 
 process.on('uncaughtException', (err: Error) => {
   console.error('Unhandled exception', err);
@@ -17,11 +35,9 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection', reason);
 });
 
-const sqlHandler: SqlHandler = new SqlHandler();
-
 sqlHandler.initDB().then(() => {
-  DiscordHandler.client.login(config.token).then(()=> {
-    new ExpressHandler();
+  discordHandler.client.login(process.env.DISCORD_TOKEN).then(()=> {
+    new ExpressHandler(sqlHandler, googleSheetsHandler);
   });
   setInterval(async ()=> {
     const now: Date = new Date();
@@ -30,7 +46,7 @@ sqlHandler.initDB().then(() => {
     for (const event of events) {
       const message = await sqlHandler.getMessageEvent(event);
       try {
-        const guild = DiscordHandler.client.guilds.cache.get(message.guildId);
+        const guild = discordHandler.client.guilds.cache.get(message.guildId);
         try {
           const channel: TextChannel = (await guild.channels.fetch(message.channelId)) as TextChannel;
           try {
