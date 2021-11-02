@@ -7,11 +7,11 @@ export class LanguageHandler {
   }
 
   /**
- * Replaces preset args with values in a string
- * @param input
- * @param args
- * @return the filled string
- */
+   * Replaces preset args with values in a string
+   * @param input
+   * @param args
+   * @return the filled string
+   */
   public replaceArgs(input: string, args: string[]) {
     // console.log(input);
     // console.log(args);

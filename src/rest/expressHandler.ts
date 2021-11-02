@@ -13,9 +13,9 @@ export default class ExpressHandler {
     this.app = express();
 
     this.app.get('/signup', this.signupHandle);
-  
+
     this.app.get('/events', this.eventsHandle);
-  
+
     this.app.listen(config.restPort, ()=> {
       console.log(`Express API listening`);
     });
@@ -41,7 +41,7 @@ export default class ExpressHandler {
       console.log('Request denied 400 - missing time');
       return;
     }
-  
+
     let eventTimestamp: number;
     try {
       const date: Date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
@@ -51,21 +51,21 @@ export default class ExpressHandler {
       res.status(400).send('"date" and/or "time" are in the wrong format. Expected is: DD.MM.YYYY HH:MM');
       return;
     }
-  
+
     const eventId: string = await this.sqlHandler.getEventId(eventName, eventTimestamp.toString());
     if (!eventId) {
       console.log('Request denied 404 - Could not find Event');
       res.status(404).send('Could not find event.');
       return;
     }
-  
+
     try {
       const returnBody = {players: new Array()};
       const signups: string[] = await this.sqlHandler.getSignups(eventId);
-  
+
       const data = await this.googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
       const fullSheet: string[][] = data.values?data.values:[[]];
-  
+
       for (const id of signups) {
         const player: string[] = fullSheet.find((subarray: string[])=> subarray[1]===id );
         returnBody.players.push({
@@ -89,6 +89,27 @@ export default class ExpressHandler {
   }
 
   private async eventsHandle(req: Request, res: Response) {
-
+    const includeClosed = req.query.includeClosed as string;
+    console.log('Events request', includeClosed);
+    try {
+      const events = await sqlHandler.getEvents(includeClosed !== undefined);
+      const responseBody = [];
+      for (const event of events) {
+        let timeString;
+        let dateString;
+        [dateString, timeString] = dateHandler.getCESTStringFromDate(new Date(parseInt(event.date, 10)*1000));
+        if (timeString.endsWith('CET')) {
+          timeString = timeString.substr(0, timeString.length - 4);
+        } else {
+          timeString = timeString.substr(0, timeString.length - 5);
+        }
+        responseBody.push({name: event.name, date: dateString, time: timeString});
+      }
+      res.status(200).send(responseBody);
+      console.log('Events request success 200');
+    } catch (err) {
+      res.status(500).send('Internal error while processing the request');
+      console.error(err);
+    }
   }
-} 
+}

@@ -1,6 +1,5 @@
 import DiscordHandler from './misc/discordHandler';
 import GoogleSheetsHandler from './misc/googleSheetsHandler';
-import config from './config';
 import InteractionHandler from './misc/interactionHandler';
 import SqlHandler from './misc/sqlHandler';
 import ExpressHandler from './rest/expressHandler';
@@ -17,14 +16,16 @@ declare global {
   var sqlHandler: SqlHandler;
   var googleSheetsHandler: GoogleSheetsHandler;
   var languageHandler: LanguageHandler;
+  var interactionHandler: InteractionHandler;
 }
+global.languageHandler = new LanguageHandler();
+global.googleSheetsHandler = new GoogleSheetsHandler();
+global.interactionHandler = new InteractionHandler();
 global.discordHandler = new DiscordHandler();
 global.sqlHandler = new SqlHandler();
-global.googleSheetsHandler = new GoogleSheetsHandler();
-global.languageHandler = new LanguageHandler();
-const interactionHandler: InteractionHandler = new InteractionHandler();
 
-discordHandler.client.on('interaction', interactionHandler.handle);
+
+discordHandler.client.on('interactionCreate', (interaction)=> global.interactionHandler.handle(interaction));
 
 
 
@@ -35,10 +36,10 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection', reason);
 });
 
-sqlHandler.initDB().then(() => {
-  discordHandler.client.login(process.env.DISCORD_TOKEN).then(()=> {
-    new ExpressHandler(sqlHandler, googleSheetsHandler);
-  });
+sqlHandler.initDB().then(async () => {
+  await discordHandler.client.login(process.env.DISCORD_TOKEN).then(()=> new ExpressHandler(sqlHandler, googleSheetsHandler));
+  await interactionHandler.Init();
+  console.log('SUN Signup Bot live!')
   setInterval(async ()=> {
     const now: Date = new Date();
     now.setHours(now.getHours() - 6);

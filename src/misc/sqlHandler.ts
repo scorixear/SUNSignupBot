@@ -7,7 +7,7 @@ export default class SqlHandler {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      port: parseInt(process.env.DB_PORT),
+      port: parseInt(process.env.DB_PORT, 10),
       database: process.env.DB_DATABASE,
       multipleStatements: true,
       connectionLimit: 5,
@@ -29,10 +29,10 @@ export default class SqlHandler {
     } catch (error) {
       throw error;
     } finally {
-      if (conn) return conn.end();
+      if (conn) conn.end();
     }
   }
-  
+
   public async isSignedIn(event: string, userid: string) {
     let conn;
     let returnValue = false;
@@ -154,7 +154,7 @@ export default class SqlHandler {
 
   public async getEventId(eventName: string, eventDate: string) {
     let conn;
-    let returnValue: string = undefined;
+    let returnValue: string;
     try {
       conn = await this.pool.getConnection();
       const rows = await conn.query(`SELECT id FROM events WHERE name = ${conn.escape(eventName)} AND date = ${conn.escape(eventDate)}`);
@@ -206,7 +206,7 @@ export default class SqlHandler {
     return returnValue;
   }
 
-  public async getEvents(includeClosed: Boolean) {
+  public async getEvents(includeClosed: boolean) {
     let conn;
     let returnValue: {name: string, date: string}[] = [];
     try {

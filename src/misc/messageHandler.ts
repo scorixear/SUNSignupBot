@@ -1,4 +1,4 @@
-import {Guild, Message, MessageActionRow, MessageEmbed, TextBasedChannels, TextChannel, User, UserResolvable} from 'discord.js';
+import {DMChannel, Guild, Message, MessageActionRow, MessageEmbed, TextBasedChannels, TextChannel, User, UserResolvable} from 'discord.js';
 
 /**
  * Prints a MessageEmbed
@@ -6,13 +6,13 @@ import {Guild, Message, MessageActionRow, MessageEmbed, TextBasedChannels, TextC
  */
  async function sendRichTextDefault(param0 :{
   msg: Message,
-  title: string,
-  categories: {title: string, text: string, inline?:boolean}[],
-  color: number,
-  description: string,
-  thumbnail: string,
-  url: string,
-  components: MessageActionRow[],
+  title?: string,
+  categories?: {title: string, text?: string, inline?:boolean}[],
+  color?: number,
+  description?: string,
+  thumbnail?: string,
+  url?: string,
+  components?: MessageActionRow[],
 }) {
   return await sendRichText(param0.msg, param0.title, param0.categories, param0.color, param0.description, param0.thumbnail, param0.url, param0.components);
 }
@@ -21,16 +21,16 @@ import {Guild, Message, MessageActionRow, MessageEmbed, TextBasedChannels, TextC
  * Prints a Message Embed
  */
 async function sendRichTextDefaultExplicit(param0: {
-  guild: Guild,
-  channel: TextChannel,
-  author: User,
-  title: string,
-  categories: {title: string, text: string, inline?: boolean}[],
-  color: number,
-  description: string,
-  thumbnail: string,
-  url: string,
-  components: MessageActionRow[],
+  guild?: Guild,
+  channel: TextBasedChannels,
+  author?: User,
+  title?: string,
+  categories?: {title: string, text?: string, inline?: boolean}[],
+  color?: number,
+  description?: string,
+  thumbnail?: string,
+  url?: string,
+  components?: MessageActionRow[],
 }) {
   return await sendRichTextExplicit(param0.guild, param0.channel, param0.author, param0.title, param0.categories, param0.color, param0.description, param0.thumbnail, param0.url, param0.components);
 }
@@ -48,7 +48,7 @@ async function sendRichTextDefaultExplicit(param0: {
  * @param url an url
  * @param buttons
  */
-async function sendRichTextExplicit(guild: Guild, channel: TextBasedChannels, author: User, title: string, categories: {title: string, text: string, inline?: boolean}[], color: number, description: string, thumbnail: string, url: string, components: MessageActionRow[]) {
+async function sendRichTextExplicit(guild: Guild, channel: TextBasedChannels, author: User, title: string, categories: {title: string, text?: string, inline?: boolean}[], color: number, description: string, thumbnail: string, url: string, components: MessageActionRow[]) {
   channel.sendTyping();
   const richText: MessageEmbed = new MessageEmbed();
   if (title) {
@@ -81,7 +81,7 @@ async function sendRichTextExplicit(guild: Guild, channel: TextBasedChannels, au
   }
 
   if (components) {
-    return channel.send({embeds: [richText], components: components});
+    return channel.send({embeds: [richText], components});
   }
   return channel.send({embeds: [richText]});
 }
@@ -90,20 +90,20 @@ async function sendRichTextExplicit(guild: Guild, channel: TextBasedChannels, au
  * Returns a Message Embed
  */
 async function getRichTextExplicitDefault(param0: {
-  guild: Guild,
-  author: User,
-  title: string,
-  categories: {title: string, text: string, inline?: boolean}[],
-  color: number,
-  description: string,
-  thumbnail: string,
-  url: string,
-  components: MessageActionRow[],
+  guild?: Guild,
+  author?: User,
+  title?: string,
+  categories?: {title: string, text?: string, inline?: boolean}[],
+  color?: number,
+  description?: string,
+  thumbnail?: string,
+  url?: string,
+  components?: MessageActionRow[],
 }) {
   return getRichTextExplicit(param0.guild, param0.author, param0.title, param0.categories, param0.color, param0.description, param0.thumbnail, param0.url, param0.components);
 }
 
-async function getRichTextExplicit(guild: Guild, author: User, title: string, categories: {title: string, text: string, inline?: boolean}[], color: number, description: string, thumbnail: string, url: string, components: MessageActionRow[]) {
+async function getRichTextExplicit(guild: Guild, author: User, title: string, categories: {title: string, text?: string, inline?: boolean}[], color: number, description: string, thumbnail: string, url: string, components: MessageActionRow[]) {
   const richText: MessageEmbed = new MessageEmbed();
   if (title) {
     richText.setTitle(title);
@@ -137,7 +137,7 @@ async function getRichTextExplicit(guild: Guild, author: User, title: string, ca
   let returnValue: {embeds: MessageEmbed[], components?: MessageActionRow[]} = {embeds: [richText]};
 
   if (components) {
-    returnValue = {embeds: [richText], components: components};
+    returnValue = {embeds: [richText], components};
   }
   return returnValue;
 }
@@ -154,7 +154,7 @@ async function getRichTextExplicit(guild: Guild, author: User, title: string, ca
  * @param url
  * @param buttons
  */
-async function sendRichText(msg: Message, title: string, categories: {title: string, text: string, inline?: boolean}[], color: number, description: string, thumbnail: string, url: string, components: MessageActionRow[]) {
+async function sendRichText(msg: Message, title: string, categories: {title: string, text?: string, inline?: boolean}[], color: number, description: string, thumbnail: string, url: string, components: MessageActionRow[]) {
   return await sendRichTextExplicit(msg.guild, msg.channel, msg.author,
       title, categories, color, description, thumbnail, url, components);
 }

@@ -10,6 +10,9 @@
       },
       "success":{
         "type":"Type in `$0<$1> [args]` to use a $1!"
+      },
+      "options": {
+        "command": "The command you need help with"
       }
     },
     "signup":{
@@ -25,6 +28,13 @@
         "formatDesc": "Your Date and/or Time are in the wrong format.\nMake sure you follow DD.MM.YYYY HH:MM"
       },
       "success":{
+      },
+      "options": {
+        "channel": "The channel the Event will be posted in",
+        "event_name": "The name of the Event",
+        "event_date": "The date of the Event (Format DD.MM.YYYY)",
+        "event_time": "The time of the Event (in CEST/CET depending on the date)",
+        "event_desc": "The description shown in the Event Signup message"
       }
     },
     "deletesignup": {

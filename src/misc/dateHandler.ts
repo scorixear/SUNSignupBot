@@ -2,7 +2,7 @@
   const dateStrings = date.split('.');
   const [hours, minutes] = time.split(':');
 
-  const serverDate = new Date(Date.UTC(parseInt(dateStrings[2]), parseInt(dateStrings[1]) - 1, parseInt(dateStrings[0]), parseInt(hours), parseInt(minutes)));
+  const serverDate = new Date(Date.UTC(parseInt(dateStrings[2], 10), parseInt(dateStrings[1], 10) - 1, parseInt(dateStrings[0], 10), parseInt(hours, 10), parseInt(minutes, 10)));
   if (isCEST(serverDate)) {
     serverDate.setHours(serverDate.getHours()-2);
   } else {

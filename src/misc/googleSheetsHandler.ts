@@ -1,7 +1,7 @@
 import {Auth, google, sheets_v4} from 'googleapis';
 export default class GoogleSheetsHandler {
   private googleSheetsInstance: sheets_v4.Sheets;
-  
+
   constructor() {
     this.googleSheetsInstance = google.sheets('v4');
     const auth: Auth.GoogleAuth = new google.auth.GoogleAuth({
@@ -17,11 +17,11 @@ export default class GoogleSheetsHandler {
   }
 
   /**
- * Appends data to the google sheet.
- * @param sheetId the sheet id to edit
- * @param data the data to insert
- * @return the response from the google sheets api
- */
+   * Appends data to the google sheet.
+   * @param sheetId the sheet id to edit
+   * @param data the data to insert
+   * @return the response from the google sheets api
+   */
   public async appendData(sheetId: string, data: {range: string, values: string[][]}) {
     return await this.googleSheetsInstance.spreadsheets.values.append({
       spreadsheetId: sheetId,
@@ -57,12 +57,12 @@ export default class GoogleSheetsHandler {
    *
    * @param sheetId
    * @param range
-   * @return 
+   * @return
    */
   public async retrieveData(sheetId: string, range: string) {
     const readData = await this.googleSheetsInstance.spreadsheets.values.get( {
       spreadsheetId: sheetId,
-      range: range,
+      range,
     });
     return readData.data;
   }
