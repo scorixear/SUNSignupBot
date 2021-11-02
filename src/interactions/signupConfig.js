@@ -44,7 +44,6 @@ export const weaponOptions = [
     value: 'Ice Gauntlet',
   },
 ];
-
 export const roleOptions = [{
   label: 'Tank',
   value: 'Tank',
@@ -54,8 +53,12 @@ export const roleOptions = [{
   value: 'Melee',
 },
 {
-  label: 'Range',
-  value: 'Range',
+  label: 'Range AOE',
+  value: 'Range AOE',
+},
+{
+  label: 'Range Singletarget',
+  value: 'Range Singletarget'
 },
 {
   label: 'Healer',
