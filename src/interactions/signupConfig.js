@@ -49,8 +49,8 @@ export const roleOptions = [{
   value: 'Tank',
 },
 {
-  label: 'Melee',
-  value: 'Melee',
+  label: 'Melee DPS',
+  value: 'Melee DPS',
 },
 {
   label: 'Range AOE',
