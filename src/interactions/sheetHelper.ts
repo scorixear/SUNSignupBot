@@ -3,6 +3,7 @@ import {DMChannel, MessageActionRow, MessageButton, TextBasedChannels} from 'dis
 import messageHandler from '../misc/messageHandler';
 import GoogleSheetsHandler from '../misc/googleSheetsHandler';
 import { LanguageHandler } from '../misc/languageHandler';
+import signup from './signup';
 
 declare const googleSheetsHandler: GoogleSheetsHandler;
 declare const languageHandler: LanguageHandler;
@@ -89,11 +90,11 @@ async function sendConfirmationMessage(event: string, channel: TextBasedChannels
   const row = new MessageActionRow()
       .addComponents(
           new MessageButton()
-              .setCustomId('signup-confirmation'+event)
+              .setCustomId(interactionHandler.buttonInteractions.typeGet(signup.SignupConfirmation)+event)
               .setLabel('Confirm')
               .setStyle('SUCCESS'),
           new MessageButton()
-              .setCustomId('signup-edit'+event)
+              .setCustomId(interactionHandler.buttonInteractions.typeGet(signup.SignupEditEvent)+event)
               .setLabel('Edit')
               .setStyle('DANGER'),
       );
