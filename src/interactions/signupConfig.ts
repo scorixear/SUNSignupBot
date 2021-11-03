@@ -50,12 +50,16 @@ export const roleOptions = [{
   value: 'Tank',
 },
 {
-  label: 'Melee',
-  value: 'Melee',
+  label: 'Melee DPS',
+  value: 'Melee DPS',
 },
 {
-  label: 'Range',
-  value: 'Range',
+  label: 'Range AOE',
+  value: 'Range AOE',
+},
+{
+  label: 'Range Singletarget',
+  value: 'Range Singletarget',
 },
 {
   label: 'Healer',

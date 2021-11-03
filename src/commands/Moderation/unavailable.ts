@@ -27,8 +27,18 @@ export default class Unavailable extends CommandInteractionHandle {
     const eventTime = interaction.options.getString('event_time');
     let eventTimestamp;
     try {
-      const date = dateHandler.getUTCDateFromCETStrings(eventDate, eventName);
+      const date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
       eventTimestamp = dateHandler.getUTCTimestampFromDate(date);
+      if (isNaN(eventTimestamp)) {
+        interaction.reply(await messageHandler.getRichTextExplicitDefault({
+          guild: interaction.guild,
+          author: interaction.user,
+          title: languageHandler.language.commands.deletesignup.error.formatTitle,
+          description: languageHandler.language.commands.deletesignup.error.formatDesc,
+          color: 0xcc0000,
+        }));
+        return;
+      }
     } catch (err) {
       interaction.reply(await messageHandler.getRichTextExplicitDefault({
         guild: interaction.guild,

@@ -18,9 +18,9 @@ export default class InteractionHandler {
   private commandInteractions: CommandInteractionHandle[];
   constructor() {
     this.buttonInteractions = new TwoWayMap(new Map([
-      ['signup', new signup.SignupEvent('signup')],
-      ['signout', new signup.SignoutEvent('signout')],
-      ['signout-confirmation', new signup.SignupConfirmation('signup-confirmation')],
+      ['signup-1', new signup.SignupEvent('signup-1')],
+      ['signout-1', new signup.SignoutEvent('signout-1')],
+      ['signup-confirmation', new signup.SignupConfirmation('signup-confirmation')],
       ['signup-edit', new signup.SignupEditEvent('signup-edit')],
       ['unavailable', new signup.UnavailableEvent('unavailable')],
     ]));
@@ -53,10 +53,10 @@ export default class InteractionHandler {
     const commands = this.commandInteractions.map(command => command.slashCommandBuilder.toJSON());
     const rest = new REST( {version: '9'}).setToken(process.env.DISCORD_TOKEN);
 
-    global.discordHandler.client.guilds.cache.forEach(async guild=> {
-      console.log('Rest Response:', await rest.put(Routes.applicationGuildCommands(config.clientId, guild.id), {body: commands})
+    global.discordHandler.client.guilds.cache.forEach(guild=> {
+      rest.put(Routes.applicationGuildCommands(config.clientId, guild.id), {body: commands})
           .then(()=> console.log('Successfully registered application commands for guild', guild.id))
-          .catch(console.error));
+          .catch(console.error);
     });
   }
 
@@ -64,21 +64,22 @@ export default class InteractionHandler {
     try {
       if (interaction.isButton()) {
         const buttonInteraction: ButtonInteraction = interaction as ButtonInteraction;
-        const key = (Object.keys(this.buttonInteractions) as string[]).find(id => buttonInteraction.customId.startsWith(id));
-        console.log(key);
-        await this.buttonInteractions.get(key)?.handle(buttonInteraction);
+        const interactionHandle: ButtonInteractionHandle = this.buttonInteractions.find(id => buttonInteraction.customId.startsWith(id));
+        if(interactionHandle) {
+          await interactionHandle.handle(buttonInteraction);
+        }
       } else if (interaction.isCommand()) {
         const commandInteraction: CommandInteraction = interaction as CommandInteraction;
         const handler = this.commandInteractions.find(interactionHandle => interactionHandle.command === commandInteraction.commandName);
         if (handler) {
-          handler.handle(commandInteraction);
-        } else {
-          throw new Error('Didn\'t found Interaction ' + commandInteraction.commandName)
+          await handler.handle(commandInteraction);
         }
       } else if (interaction.isSelectMenu()) {
         const selectMenuInteraction: SelectMenuInteraction = interaction as SelectMenuInteraction;
-        const key = (Object.keys(this.selectMenuInteractions) as string[]).find(id => selectMenuInteraction.customId.startsWith(id));
-        await this.selectMenuInteractions.get(key)?.handle(selectMenuInteraction);
+        const interactionHandle: SelectMenuInteractionHandle = this.selectMenuInteractions.find(id => selectMenuInteraction.customId.startsWith(id));
+        if (interactionHandle) {
+          await interactionHandle.handle(selectMenuInteraction);
+        }
       } else {
         return;
       }

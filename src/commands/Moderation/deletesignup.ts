@@ -25,10 +25,20 @@ export default class Deletesignup extends CommandInteractionHandle {
     const eventName = interaction.options.getString('event_name');
     const eventDate = interaction.options.getString('event_date');
     const eventTime = interaction.options.getString('event_time');
-    let eventTimestamp;
+    let eventTimestamp: number;
     try {
       const date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
       eventTimestamp = dateHandler.getUTCTimestampFromDate(date);
+      if (isNaN(eventTimestamp)) {
+        interaction.reply(await messageHandler.getRichTextExplicitDefault({
+          guild: interaction.guild,
+          author: interaction.user,
+          title: languageHandler.language.commands.deletesignup.error.formatTitle,
+          description: languageHandler.language.commands.deletesignup.error.formatDesc,
+          color: 0xcc0000,
+        }));
+        return;
+      }
     } catch (err) {
       console.error(err);
       interaction.reply(await messageHandler.getRichTextExplicitDefault({

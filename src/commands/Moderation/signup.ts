@@ -7,6 +7,7 @@ import {  SlashCommandChannelOption, SlashCommandStringOption } from '@discordjs
 import { ChannelType } from 'discord-api-types';
 import {roleOptions} from '../../interactions/signupConfig';
 import sheetHelper from '../../interactions/sheetHelper';
+import signup from '../../interactions/signup';
 
 /**
  *
@@ -110,12 +111,22 @@ export default class SignupCommand extends CommandInteractionHandle {
     const eventDate = interaction.options.getString('event_date');
     const eventTime = interaction.options.getString('event_time');
     const eventDesc = interaction.options.getString('event_description');
-    let eventTimestamp;
+    let eventTimestamp: number;
     let [dateString, timeString]: string[] = [ undefined, undefined];
     try {
       const date = dateHandler.getUTCDateFromCETStrings(eventDate, eventTime);
       eventTimestamp = dateHandler.getUTCTimestampFromDate(date);
       [dateString, timeString] = dateHandler.getCESTStringFromDate(date);
+      if (isNaN(eventTimestamp) || !dateString || !timeString) {
+        interaction.reply(await messageHandler.getRichTextExplicitDefault({
+          guild: interaction.guild,
+          author: interaction.user,
+          title: languageHandler.language.commands.deletesignup.error.formatTitle,
+          description: languageHandler.language.commands.deletesignup.error.formatDesc,
+          color: 0xcc0000,
+        }));
+        return;
+      }
     } catch (err) {
       console.error(err);
       interaction.reply(await messageHandler.getRichTextExplicitDefault({
@@ -144,15 +155,15 @@ export default class SignupCommand extends CommandInteractionHandle {
     const row = new MessageActionRow()
         .addComponents(
             new MessageButton()
-                .setCustomId('signup'+eventId)
+                .setCustomId(interactionHandler.buttonInteractions.typeGet(signup.SignupEvent)+eventId)
                 .setLabel('Sign up')
                 .setStyle('SUCCESS'),
             new MessageButton()
-                .setCustomId('signout'+eventId)
+                .setCustomId(interactionHandler.buttonInteractions.typeGet(signup.SignoutEvent)+eventId)
                 .setLabel('Sign out')
                 .setStyle('DANGER'),
             new MessageButton()
-                .setCustomId('unavailable'+eventId)
+                .setCustomId(interactionHandler.buttonInteractions.typeGet(signup.UnavailableEvent)+eventId)
                 .setLabel('Unavailable')
                 .setStyle('SECONDARY'),
         );
@@ -197,6 +208,7 @@ export default class SignupCommand extends CommandInteractionHandle {
       components: [row],
     });
     await sqlHandler.createMessageEvent(eventId.toString(), message.id, channel.id, message.guild.id);
+    interaction.reply('Message created: '+message.url);
     console.log(`Created Event ${eventName} ${eventTimestamp}`);
   }
 }

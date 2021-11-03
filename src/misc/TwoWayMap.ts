@@ -24,4 +24,13 @@ export default class TwoWayMap<K, V>{
     }
     return undefined;
   }
+
+  find(action: (key: K)=>boolean) {
+    for(const k of this.map.keys()) {
+      if (action(k)) {
+        return this.map.get(k);
+      }
+    }
+    return undefined;
+  }
 }
