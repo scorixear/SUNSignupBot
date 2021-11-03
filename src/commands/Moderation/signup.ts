@@ -98,11 +98,17 @@ export default class SignupCommand extends CommandInteractionHandle {
       'signup #announcements "Everfall Push" 14.10.2021 12:00 "Sign up for Everfall Push"',
       'Moderation',
       'signup <#channel> <eventName> <date> <CET/CEST Time> <Description>',
-      commandOptions
+      commandOptions,
+      true
     );
   }
 
   override async handle(interaction: CommandInteraction) {
+    try {
+      await super.handle(interaction);
+    } catch(err) {
+      return;
+    }
     const channel = interaction.options.getChannel('channel') as TextChannel;
     const eventName = interaction.options.getString('event_name');
     const eventDate = interaction.options.getString('event_date');

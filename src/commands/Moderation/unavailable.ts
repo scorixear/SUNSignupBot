@@ -22,11 +22,17 @@ export default class Unavailable extends CommandInteractionHandle {
       'unavailable "Everfall Push" 14.10.2021 12:00',
       'Moderation',
       'unavailable <eventName> <date> <CET/CEST Time>',
-      commandOptions
+      commandOptions,
+      true,
     );
   }
 
   override async handle(interaction: CommandInteraction) {
+    try {
+      await super.handle(interaction);
+    } catch(err) {
+      return;
+    }
     const eventName = interaction.options.getString('event_name');
     const eventDate = interaction.options.getString('event_date');
     const eventTime = interaction.options.getString('event_time');

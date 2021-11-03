@@ -2,7 +2,7 @@ import messageHandler from '../../misc/messageHandler.js';
 import config from '../../config.js';
 import { CommandInteractionHandle } from '../../interactions/interactionHandles';
 import { SlashCommandStringOption } from '@discordjs/builders';
-import { ApplicationCommand, CommandInteraction } from 'discord.js';
+import { ApplicationCommand, CommandInteraction, GuildMember, GuildMemberRoleManager } from 'discord.js';
 import { LanguageHandler } from '../../misc/languageHandler.js';
 
 declare const languageHandler: LanguageHandler;
@@ -16,7 +16,8 @@ export default class Help extends CommandInteractionHandle {
       'help\nhelp signup',
       'Misc',
       `help [${languageHandler.language.commands.help.labels.command.toLowerCase()}]`,
-      [new SlashCommandStringOption().setName('command').setDescription(languageHandler.language.commands.help.options.command).setRequired(false)]
+      [new SlashCommandStringOption().setName('command').setDescription(languageHandler.language.commands.help.options.command).setRequired(false)],
+      false
     );
   }
 
@@ -25,13 +26,25 @@ export default class Help extends CommandInteractionHandle {
   }
 
   override async handle(interaction: CommandInteraction) {
+    try {
+      await super.handle(interaction);
+    } catch(err) {
+      return;
+    }
+    const member = await (interaction.member as GuildMember).fetch();
     const command = interaction.options.getString('command', false);
-
+    const memberRoles = (member.roles as GuildMemberRoleManager).cache;
     if (command) {
       const commandHandle = this.commands.find((c: CommandInteractionHandle)=> command.startsWith(c.command));
       if (commandHandle) {
-        const discordCommand = (await interaction.guild.commands.fetch()).find((appCommand)=> appCommand.name === this.command);
-        if(!discordCommand) {
+        let found: boolean = false;
+        for (const memberRole of memberRoles.values()) {
+          if(config.signupRoles.find((signupRole: string) => signupRole === memberRole.name)) {
+            found = true;
+            break;
+          }
+        }
+        if(!found) {
           interaction.reply(await messageHandler.getRichTextExplicitDefault({
             guild: interaction.guild,
             author: interaction.user,
@@ -87,16 +100,26 @@ export default class Help extends CommandInteractionHandle {
     }
 
     const categories: Map<string, string[]> = new Map();
-    this.commands.forEach(async (cmd) => {
-      const discordCommand = (await interaction.guild.commands.fetch()).find((appCommand)=> appCommand.name === this.command);
-      if(discordCommand) {
+    for(const cmd of this.commands) {
+      let found: boolean = false;
+      if(cmd.requirePermissions) {
+        for (const memberRole of memberRoles.values()) {
+          if(config.signupRoles.find((signupRole: string) => signupRole === memberRole.name)) {
+            found = true;
+            break;
+          }
+        }
+      } else {
+        found = true;
+      }
+      if(found) {
         if (categories.has(cmd.category)) {
           categories.get(cmd.category).push(cmd.command);
         } else {
           categories.set(cmd.category, new Array(cmd.command));
         }
       }
-    });
+    }
     const embededCategories: {title: string, text: string, inline?: boolean}[] =[{
       title: 'Info',
       text: languageHandler.replaceArgs(languageHandler.language.commands.help.success.type, [config.botPrefix, languageHandler.language.commands.help.labels.command]),

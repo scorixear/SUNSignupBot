@@ -1,7 +1,7 @@
 {
-  "clientId": "792410047257772063",
   "repository": "https://github.com/scorixear/SUNSignupBot/",
   "botPrefix": "/",
   "version": "1.0.0",
-  "restPort": "8096"
+  "restPort": "8096",
+  "signupRoles": ["New World Officer", "War Captain"]
 }

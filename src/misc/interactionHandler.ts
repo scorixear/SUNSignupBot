@@ -1,4 +1,4 @@
-import { ButtonInteraction, CommandInteraction, Interaction, SelectMenuInteraction } from 'discord.js';
+import { ApplicationCommandPermissionData, ButtonInteraction, CommandInteraction, Interaction, SelectMenuInteraction } from 'discord.js';
 import SignupCommand from '../commands/Moderation/signup';
 import {ButtonInteractionHandle, SelectMenuInteractionHandle, CommandInteractionHandle} from '../interactions/interactionHandles';
 import { REST } from '@discordjs/rest';
@@ -53,11 +53,29 @@ export default class InteractionHandler {
     const commands = this.commandInteractions.map(command => command.slashCommandBuilder.toJSON());
     const rest = new REST( {version: '9'}).setToken(process.env.DISCORD_TOKEN);
 
-    global.discordHandler.client.guilds.cache.forEach(guild=> {
-      rest.put(Routes.applicationGuildCommands(process.env.CLIENTID, guild.id), {body: commands})
-          .then(()=> console.log('Successfully registered application commands for guild', guild.id))
-          .catch(console.error);
+    global.discordHandler.client.guilds.cache.forEach(async guild=> {
+      await rest.put(Routes.applicationGuildCommands(process.env.CLIENTID, guild.id), {body: commands})
+      console.log('Successfully registered application commands for guild', guild.id);
+      const guildRoles = await guild.roles.fetch();
+      const guildCommands = await guild.commands.fetch();
+      const signupRoles = guildRoles.filter(role => config.signupRoles.includes(role.name));
+      const permissionsObject: ApplicationCommandPermissionData[] = [];
+      signupRoles.forEach(role => permissionsObject.push({
+        id: role.id,
+        type: 'ROLE',
+        permission: true,
+      }));
+      this.commandInteractions.forEach(interaction => {
+        if(interaction.requirePermissions) {
+          const applicationCommand = guildCommands.find(appCommand => appCommand.name === interaction.command);
+          applicationCommand.permissions.set({
+            permissions: permissionsObject,
+          })
+        }
+      })
     });
+
+
   }
 
   public async handle(interaction: Interaction) {
