@@ -58,7 +58,7 @@ export const roleOptions = [{
 },
 {
   label: 'Range Singletarget',
-  value: 'Range Singletarget'
+  value: 'Range Singletarget',
 },
 {
   label: 'Healer',

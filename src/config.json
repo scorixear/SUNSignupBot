@@ -1,0 +1,9 @@
+{
+  "clientId": "792410047257772063",
+  "repository": "https://github.com/scorixear/SUNSignupBot/",
+  "botPrefix": "/",
+  "googleSheetsId": "1pdtyEmPMg1TBI59TCWaVTI-okIlzPALiNJJbOodVukc",
+  "googleSheetsRange": "Players!A2:H",
+  "version": "1.0.0",
+  "restPort": "8096"
+}
