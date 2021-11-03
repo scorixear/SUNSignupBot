@@ -33,7 +33,7 @@ function getDateFromUTCTimestamp(timestamp: number) {
 
 function getCESTStringFromDate(date: Date) {
   const utcDate = new Date(date.getTime() + date.getTimezoneOffset()*60*1000);
-  let suffix;
+  let suffix: string;
   if (isCEST(date)) {
     suffix = 'CEST';
     utcDate.setHours(utcDate.getHours() + 2);
