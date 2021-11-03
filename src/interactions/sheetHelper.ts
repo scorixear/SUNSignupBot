@@ -1,6 +1,11 @@
 import config from '../config';
 import {DMChannel, MessageActionRow, MessageButton, TextBasedChannels} from 'discord.js';
 import messageHandler from '../misc/messageHandler';
+import GoogleSheetsHandler from '../misc/googleSheetsHandler';
+import { LanguageHandler } from '../misc/languageHandler';
+
+declare const googleSheetsHandler: GoogleSheetsHandler;
+declare const languageHandler: LanguageHandler;
 
 /**
  * Retrieves the Row from a google sheet
@@ -8,7 +13,7 @@ import messageHandler from '../misc/messageHandler';
  */
  async function getRowFromSheet(userId: string) {
   // retrieve Players data from signup sheet
-  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
+  const data = await googleSheetsHandler.retrieveData();
   // if data is empty, .values is missing and we initialize with empty array
   const fullSheetArray = data.values?data.values:[[]];
   // Finds Player Row by their user ID
@@ -18,7 +23,7 @@ import messageHandler from '../misc/messageHandler';
 
 async function getSheetData() {
   // retrieve Players data from signup sheet
-  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
+  const data = await googleSheetsHandler.retrieveData();
   // if data is empty, .values is missing and we initialize with empty array
   const fullSheetArray: string[][] = data.values?data.values:[[]];
 
@@ -30,7 +35,7 @@ async function getSheetData() {
  * @param userId
  */
 async function getIndexFromSheet(userId: string) {
-  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
+  const data = await googleSheetsHandler.retrieveData();
   const fullSheetArray = data.values?data.values:[[]];
   for (let i = 0; i<fullSheetArray.length; i++) {
     if (fullSheetArray[i][1]===userId) {
@@ -45,7 +50,7 @@ async function getIndexFromSheet(userId: string) {
  * @param userId
  */
 async function getIndexAndRowFromSheet(userId: string): Promise<[number, string[]]> {
-  const data = await googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
+  const data = await googleSheetsHandler.retrieveData();
   const fullSheetArray: string[][] = data.values?data.values:[[]];
   for (let i = 0; i<fullSheetArray.length; i++) {
     if (fullSheetArray[i][1]===userId) {
@@ -69,9 +74,9 @@ async function updateCellInSheet(data: [number, string], event: string, channel:
  */
 async function updateRowInSheet(data: string[], index: number) {
   const regex = /^(.+\![A-Z]+)(\d+):([A-Z]+)\d*$/g;
-  const match = [...config.googleSheetsRange.matchAll(regex)].flat(1);
+  const match = [...process.env.GOOGLESHEETSRANGE.matchAll(regex)].flat(1);
   if (match) {
-    await googleSheetsHandler.updateData(config.googleSheetsId, {range: `${match[1]}${index+parseInt(match[2], 10)}:${match[3]}${index+parseInt(match[2], 10)}`, values: [data]});
+    await googleSheetsHandler.updateData({range: `${match[1]}${index+parseInt(match[2], 10)}:${match[3]}${index+parseInt(match[2], 10)}`, values: [data]});
   } else {
     throw new Error('Google Sheets Range does not match Regex '+ config.googleSheetsRange);
   }

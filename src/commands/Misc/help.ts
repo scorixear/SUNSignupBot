@@ -3,7 +3,9 @@ import config from '../../config.js';
 import { CommandInteractionHandle } from '../../interactions/interactionHandles';
 import { SlashCommandStringOption } from '@discordjs/builders';
 import { ApplicationCommand, CommandInteraction } from 'discord.js';
+import { LanguageHandler } from '../../misc/languageHandler.js';
 
+declare const languageHandler: LanguageHandler;
 
 export default class Help extends CommandInteractionHandle {
   commands: CommandInteractionHandle[];

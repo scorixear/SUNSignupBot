@@ -4,6 +4,13 @@ import config from '../../config';
 import dateHandler from '../../misc/dateHandler';
 import { CommandInteractionHandle } from '../../interactions/interactionHandles';
 import { SlashCommandStringOption } from '@discordjs/builders';
+import { LanguageHandler } from '../../misc/languageHandler';
+import SqlHandler from '../../misc/sqlHandler';
+import DiscordHandler from '../../misc/discordHandler';
+
+declare const languageHandler: LanguageHandler;
+declare const sqlHandler: SqlHandler;
+declare const discordHandler: DiscordHandler;
 
 export default class Deletesignup extends CommandInteractionHandle {
   constructor() {

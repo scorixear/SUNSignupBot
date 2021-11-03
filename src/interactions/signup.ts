@@ -7,7 +7,15 @@ import editHandler from './editHandler';
 import sheetHelper from './sheetHelper';
 import messageCollectorHandler from './messageCollectorHandler';
 import { ButtonInteractionHandle, SelectMenuInteractionHandle } from './interactionHandles';
+import SqlHandler from '../misc/sqlHandler';
+import { LanguageHandler } from '../misc/languageHandler';
+import InteractionHandler from '../misc/interactionHandler';
+import GoogleSheetsHandler from '../misc/googleSheetsHandler';
 
+declare const sqlHandler: SqlHandler;
+declare const languageHandler: LanguageHandler;
+declare const interactionHandler: InteractionHandler;
+declare const googleSheetsHandler: GoogleSheetsHandler;
 
 /**
  * Local Storage for ongoing Signups
@@ -368,7 +376,7 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
      console.log('Google Sheet User Updated', userId, event);
    } else {
      // append new Row to sheet
-     await googleSheetsHandler.appendData(config.googleSheetsId, {range: config.googleSheetsRange, values: [[
+     await googleSheetsHandler.appendData({range: config.googleSheetsRange, values: [[
        userData.name,
        userId,
        userData.weapon1,

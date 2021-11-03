@@ -5,6 +5,11 @@ import config from '../config';
 import sheetHelper from './sheetHelper';
 import messageCollectorHandler from './messageCollectorHandler';
 import { ButtonInteractionHandle, SelectMenuInteractionHandle } from './interactionHandles';
+import { LanguageHandler } from '../misc/languageHandler';
+import InteractionHandler from '../misc/interactionHandler';
+
+declare const languageHandler: LanguageHandler;
+declare const interactionHandler: InteractionHandler;
 
 /**
  * Called to collect name

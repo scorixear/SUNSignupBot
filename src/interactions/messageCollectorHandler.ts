@@ -1,7 +1,10 @@
 import config from '../config';
 import messageHandler from '../misc/messageHandler';
-import {DMChannel, Message, TextBasedChannels} from 'discord.js';
+import {Message, TextBasedChannels} from 'discord.js';
 import signup from './signup';
+import { LanguageHandler } from '../misc/languageHandler';
+
+declare const languageHandler: LanguageHandler;
 
 async function createMessageCollector(channel: TextBasedChannels, message: Message, description: string, action: (msg: Message) => void, userId: string) {
   // start collector for one message with timeout of 50 seconds

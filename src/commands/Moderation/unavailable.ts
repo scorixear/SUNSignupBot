@@ -1,9 +1,14 @@
-import {CommandInteraction, Message} from 'discord.js';
+import {CommandInteraction} from 'discord.js';
 import messageHandler from '../../misc/messageHandler';
 import config from '../../config';
 import dateHandler from '../../misc/dateHandler';
 import { CommandInteractionHandle } from '../../interactions/interactionHandles';
 import { SlashCommandStringOption } from '@discordjs/builders';
+import { LanguageHandler } from '../../misc/languageHandler';
+import SqlHandler from '../../misc/sqlHandler';
+
+declare const languageHandler: LanguageHandler;
+declare const sqlHandler: SqlHandler;
 
 export default class Unavailable extends CommandInteractionHandle {
   constructor() {

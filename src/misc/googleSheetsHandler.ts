@@ -22,9 +22,9 @@ export default class GoogleSheetsHandler {
    * @param data the data to insert
    * @return the response from the google sheets api
    */
-  public async appendData(sheetId: string, data: {range: string, values: string[][]}) {
+  public async appendData(data: {range: string, values: string[][]}) {
     return await this.googleSheetsInstance.spreadsheets.values.append({
-      spreadsheetId: sheetId,
+      spreadsheetId: process.env.GOOGLESHEETSID,
       range: data.range,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
@@ -38,13 +38,13 @@ export default class GoogleSheetsHandler {
    * @param data the data to update
    * @return the response from the google sheets api
    */
-  public async updateData(sheetId: string, data: {range: string, values: string[][]}) {
+  public async updateData(data: {range: string, values: string[][]}) {
     await this.googleSheetsInstance.spreadsheets.values.clear({
       range: data.range,
-      spreadsheetId: sheetId,
+      spreadsheetId: process.env.GOOGLESHEETSID,
     });
     return await this.googleSheetsInstance.spreadsheets.values.update({
-      spreadsheetId: sheetId,
+      spreadsheetId: process.env.GOOGLESHEETSID,
       range: data.range,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
@@ -59,10 +59,10 @@ export default class GoogleSheetsHandler {
    * @param range
    * @return
    */
-  public async retrieveData(sheetId: string, range: string) {
+  public async retrieveData() {
     const readData = await this.googleSheetsInstance.spreadsheets.values.get( {
-      spreadsheetId: sheetId,
-      range,
+      spreadsheetId: process.env.GOOGLESHEETSID,
+      range: process.env.GOOGLESHEETSRANGE,
     });
     return readData.data;
   }

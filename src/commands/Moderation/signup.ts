@@ -8,6 +8,13 @@ import { ChannelType } from 'discord-api-types';
 import {roleOptions} from '../../interactions/signupConfig';
 import sheetHelper from '../../interactions/sheetHelper';
 import signup from '../../interactions/signup';
+import { LanguageHandler } from '../../misc/languageHandler.js';
+import SqlHandler from '../../misc/sqlHandler.js';
+import InteractionHandler from '../../misc/interactionHandler.js';
+
+declare const languageHandler: LanguageHandler;
+declare const sqlHandler: SqlHandler;
+declare const interactionHandler: InteractionHandler;
 
 /**
  *

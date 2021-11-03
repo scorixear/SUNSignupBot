@@ -37,7 +37,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 sqlHandler.initDB().then(async () => {
-  await discordHandler.client.login(process.env.DISCORD_TOKEN).then(()=> new ExpressHandler(sqlHandler, googleSheetsHandler));
+  await discordHandler.client.login(process.env.DISCORD_TOKEN).then(()=> new ExpressHandler());
   await interactionHandler.Init();
   console.log('SUN Signup Bot live!')
   setInterval(async ()=> {

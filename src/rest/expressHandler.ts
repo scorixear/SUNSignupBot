@@ -4,12 +4,12 @@ import GoogleSheetsHandler from '../misc/googleSheetsHandler';
 import SqlHandler from '../misc/sqlHandler';
 import dateHandler from '../misc/dateHandler';
 
+declare const sqlHandler: SqlHandler;
+declare const googleSheetsHandler: GoogleSheetsHandler;
+
 export default class ExpressHandler {
   private app;
-  private sqlHandler: SqlHandler;
-  private googleSheetsHandler: GoogleSheetsHandler;
-
-  constructor (sqlHandler: SqlHandler, googleSheetsHandler: GoogleSheetsHandler) {
+  constructor () {
     this.app = express();
 
     this.app.get('/signup', this.signupHandle);
@@ -19,8 +19,6 @@ export default class ExpressHandler {
     this.app.listen(config.restPort, ()=> {
       console.log(`Express API listening`);
     });
-    this.sqlHandler = sqlHandler;
-    this.googleSheetsHandler = googleSheetsHandler;
   }
 
   private async signupHandle(req: Request, res: Response) {
@@ -52,7 +50,7 @@ export default class ExpressHandler {
       return;
     }
 
-    const eventId: string = await this.sqlHandler.getEventId(eventName, eventTimestamp.toString());
+    const eventId: string = await sqlHandler.getEventId(eventName, eventTimestamp.toString());
     if (!eventId) {
       console.log('Request denied 404 - Could not find Event');
       res.status(404).send('Could not find event.');
@@ -61,9 +59,9 @@ export default class ExpressHandler {
 
     try {
       const returnBody = {players: new Array()};
-      const signups: string[] = await this.sqlHandler.getSignups(eventId);
+      const signups: string[] = await sqlHandler.getSignups(eventId);
 
-      const data = await this.googleSheetsHandler.retrieveData(config.googleSheetsId, config.googleSheetsRange);
+      const data = await googleSheetsHandler.retrieveData();
       const fullSheet: string[][] = data.values?data.values:[[]];
 
       for (const id of signups) {
