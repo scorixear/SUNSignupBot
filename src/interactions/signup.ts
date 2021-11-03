@@ -491,7 +491,7 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
     }));
 
 
-    msg.awaitReactions({filter: (react, user)=>user.id !== config.clientId, max: 1, time: 60000})
+    msg.awaitReactions({filter: (react, user)=>user.id !== process.env.CLIENTID, max: 1, time: 60000})
         .then(async (collected: Collection<string, MessageReaction>) => {
           msg.delete();
           if (collected.size === 0) {

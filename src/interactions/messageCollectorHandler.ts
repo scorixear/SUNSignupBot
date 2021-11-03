@@ -8,7 +8,7 @@ declare const languageHandler: LanguageHandler;
 
 async function createMessageCollector(channel: TextBasedChannels, message: Message, description: string, action: (msg: Message) => void, userId: string) {
   // start collector for one message with timeout of 50 seconds
-  const collector = channel.createMessageCollector({filter: (m)=>m.author.id !== config.clientId, max: 1, time: 50000});
+  const collector = channel.createMessageCollector({filter: (m)=>m.author.id !== process.env.CLIENTID, max: 1, time: 50000});
   collector.next
       .then(async (msg) => {
         message.delete();

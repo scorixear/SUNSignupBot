@@ -54,7 +54,7 @@ export default class InteractionHandler {
     const rest = new REST( {version: '9'}).setToken(process.env.DISCORD_TOKEN);
 
     global.discordHandler.client.guilds.cache.forEach(guild=> {
-      rest.put(Routes.applicationGuildCommands(config.clientId, guild.id), {body: commands})
+      rest.put(Routes.applicationGuildCommands(process.env.CLIENTID, guild.id), {body: commands})
           .then(()=> console.log('Successfully registered application commands for guild', guild.id))
           .catch(console.error);
     });
