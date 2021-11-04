@@ -368,31 +368,35 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
    const userData = userRegistration.get(userId);
    userData.gearscore = content;
 
-   // if call is to update sheet
-   if (isUpdate) {
-     // retrieve row index in sheet
-     const playerIndex = await sheetHelper.getIndexFromSheet(userId);
-     await sheetHelper.updateRowInSheet([userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore], playerIndex);
-     console.log('Google Sheet User Updated', userId, event);
-   } else {
-     // append new Row to sheet
-     await googleSheetsHandler.appendData({range: config.googleSheetsRange, values: [[
-       userData.name,
-       userId,
-       userData.weapon1,
-       userData.weapon2,
-       userData.role,
-       userData.guild,
-       userData.level,
-       userData.gearscore]]});
-     console.log('Google Sheet User Registered', userId, event);
+   try {
+    // if call is to update sheet
+    if (isUpdate) {
+      // retrieve row index in sheet
+      const playerIndex = await sheetHelper.getIndexFromSheet(userId);
+      await sheetHelper.updateRowInSheet([userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore], playerIndex);
+      console.log('Google Sheet User Updated', userId, event);
+    } else {
+      // append new Row to sheet
+      await googleSheetsHandler.appendData({range: process.env.GOOGLESHEETSRANGE, values: [[
+        userData.name,
+        userId,
+        userData.weapon1,
+        userData.weapon2,
+        userData.role,
+        userData.guild,
+        userData.level,
+        userData.gearscore]]});
+      console.log('Google Sheet User Registered', userId, event);
+    }
+      // send confirmation message about changed / registered information
+      await sheetHelper.sendConfirmationMessage(event, channel, [userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore]);
+   } catch (err) {
+     console.error(err);
+     signupFinished(userId);
+   } finally {
+      // delete local stored user data
+      userRegistration.delete(userId);
    }
-
-   // delete local stored user data
-   userRegistration.delete(userId);
-
-   // send confirmation message about changed / registered information
-   await sheetHelper.sendConfirmationMessage(event, channel, [userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore]);
  }
 
  class SignupConfirmation extends ButtonInteractionHandle {

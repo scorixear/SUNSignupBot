@@ -79,7 +79,7 @@ async function updateRowInSheet(data: string[], index: number) {
   if (match) {
     await googleSheetsHandler.updateData({range: `${match[1]}${index+parseInt(match[2], 10)}:${match[3]}${index+parseInt(match[2], 10)}`, values: [data]});
   } else {
-    throw new Error('Google Sheets Range does not match Regex '+ config.googleSheetsRange);
+    throw new Error('Google Sheets Range does not match Regex '+ process.env.GOOGLESHEETSRANGE);
   }
 }
 
