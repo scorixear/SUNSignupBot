@@ -78,37 +78,49 @@ class SignupEvent extends ButtonInteractionHandle {
     if (player) {
       // check if sql database has him signed up
       if (await sqlHandler.isSignedIn(event, userId)) {
-        // send already signed up message to user
-        channel.send(await messageHandler.getRichTextExplicitDefault({
-          guild: interaction.guild,
-          title: languageHandler.language.interactions.signup.already_signed_up_title,
-          description: languageHandler.language.interactions.signup.already_signed_up_desc,
-          color: 0xFF8888,
-        }));
+        try {
+          // send already signed up message to user
+          channel.send(await messageHandler.getRichTextExplicitDefault({
+            guild: interaction.guild,
+            title: languageHandler.language.interactions.signup.already_signed_up_title,
+            description: languageHandler.language.interactions.signup.already_signed_up_desc,
+            color: 0xFF8888,
+          }));
+        } catch (err) {
+          console.error('Error sending DM', err);
+          interaction.followUp({content: languageHandler.replaceArgs(languageHandler.language.interactions.signup.error.dmChannel, [userId]), ephemeral: true});
+        }
         // else sign up user
       } else {
         signupStarted(userId);
-        await sheetHelper.sendConfirmationMessage(event, channel, player);
+        await sheetHelper.sendConfirmationMessage(event, channel, player, interaction);
       }
       // else if player didn't register yet
     } else {
-      signupStarted(userId);
-      // send "get name" message to user
-      const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
-        guild: interaction.guild,
-        title: languageHandler.language.interactions.signup.edit.name_title,
-        description: languageHandler.language.interactions.signup.edit.name_desc,
-      }));
+      try {
+        signupStarted(userId);
+        // send "get name" message to user
+        const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
+          guild: interaction.guild,
+          title: languageHandler.language.interactions.signup.edit.name_title,
+          description: languageHandler.language.interactions.signup.edit.name_desc,
+        }));
 
-      messageCollectorHandler.createMessageCollector(
-          channel,
-          message,
-          languageHandler.language.interactions.signup.error.name_timeout_desc,
-          (msg)=> {
-            signupName(userId, event, msg, false);
-          },
-          userId,
-      );
+        messageCollectorHandler.createMessageCollector(
+            channel,
+            message,
+            languageHandler.language.interactions.signup.error.name_timeout_desc,
+            (msg)=> {
+              signupName(userId, event, msg, false);
+            },
+            userId,
+        );
+      } catch (err) {
+        signupFinished(userId);
+        console.error('Error sending DM', err);
+        interaction.followUp({content: languageHandler.replaceArgs(languageHandler.language.interactions.signup.error.dmChannel, [userId]), ephemeral: true});
+      }
+
     }
   }
 }
@@ -594,14 +606,19 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
     }
 
 
-    // Send confirmation message to channel that user was signed out
-    channel.send(await messageHandler.getRichTextExplicitDefault( {
-      guild: interaction.guild,
-      title: languageHandler.language.interactions.signout.confirmation_title,
-      description: languageHandler.language.interactions.signout.confirmation_desc,
-      color: 0x00cc00,
-    }));
-    console.log('User signed out', userId, event);
+    try {
+      // Send confirmation message to channel that user was signed out
+      await channel.send(await messageHandler.getRichTextExplicitDefault( {
+        guild: interaction.guild,
+        title: languageHandler.language.interactions.signout.confirmation_title,
+        description: languageHandler.language.interactions.signout.confirmation_desc,
+        color: 0x00cc00,
+      }));
+      console.log('User signed out', userId, event);
+    } catch (err){
+      console.error('Error sending DM', err);
+      interaction.followUp({content: languageHandler.replaceArgs(languageHandler.language.interactions.signup.error.dmChannel, [userId]), ephemeral: true});
+    }
   }
 }
 

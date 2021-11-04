@@ -1,5 +1,5 @@
 import config from '../config';
-import {DMChannel, MessageActionRow, MessageButton, TextBasedChannels} from 'discord.js';
+import {DMChannel, MessageActionRow, MessageButton, TextBasedChannels, Message, ButtonInteraction} from 'discord.js';
 import messageHandler from '../misc/messageHandler';
 import GoogleSheetsHandler from '../misc/googleSheetsHandler';
 import { LanguageHandler } from '../misc/languageHandler';
@@ -86,7 +86,7 @@ async function updateRowInSheet(data: string[], index: number) {
 /**
  * Sends a confirmation Message requesting the confirmation of the given data
  */
-async function sendConfirmationMessage(event: string, channel: TextBasedChannels, player: string[]) {
+async function sendConfirmationMessage(event: string, channel: TextBasedChannels, player: string[], interaction?: ButtonInteraction) {
   const row = new MessageActionRow()
       .addComponents(
           new MessageButton()
@@ -98,48 +98,56 @@ async function sendConfirmationMessage(event: string, channel: TextBasedChannels
               .setLabel('Edit')
               .setStyle('DANGER'),
       );
-  await channel.send(await messageHandler.getRichTextExplicitDefault({
-    title: languageHandler.language.interactions.signup.confirmation.title,
-    description: languageHandler.language.interactions.signup.confirmation.desc,
-    categories: [
-      {
-        title: languageHandler.language.interactions.signup.confirmation.name,
-        text: player[0],
-        inline: true,
-      },
-      {
-        title: languageHandler.language.interactions.signup.confirmation.weapon1,
-        text: player[2],
-        inline: true,
-      },
-      {
-        title: languageHandler.language.interactions.signup.confirmation.weapon2,
-        text: player[3],
-        inline: true,
-      },
-      {
-        title: languageHandler.language.interactions.signup.confirmation.role,
-        text: player[4],
-        inline: true,
-      },
-      {
-        title: languageHandler.language.interactions.signup.confirmation.guild,
-        text: player[5],
-        inline: true,
-      },
-      {
-        title: languageHandler.language.interactions.signup.confirmation.level,
-        text: player[6],
-        inline: true,
-      },
-      {
-        title: languageHandler.language.interactions.signup.confirmation.gearscore,
-        text: player[7],
-        inline: true,
-      },
-    ],
-    components: [row],
-  }));
+  try {
+    await channel.send(await messageHandler.getRichTextExplicitDefault({
+      title: languageHandler.language.interactions.signup.confirmation.title,
+      description: languageHandler.language.interactions.signup.confirmation.desc,
+      categories: [
+        {
+          title: languageHandler.language.interactions.signup.confirmation.name,
+          text: player[0],
+          inline: true,
+        },
+        {
+          title: languageHandler.language.interactions.signup.confirmation.weapon1,
+          text: player[2],
+          inline: true,
+        },
+        {
+          title: languageHandler.language.interactions.signup.confirmation.weapon2,
+          text: player[3],
+          inline: true,
+        },
+        {
+          title: languageHandler.language.interactions.signup.confirmation.role,
+          text: player[4],
+          inline: true,
+        },
+        {
+          title: languageHandler.language.interactions.signup.confirmation.guild,
+          text: player[5],
+          inline: true,
+        },
+        {
+          title: languageHandler.language.interactions.signup.confirmation.level,
+          text: player[6],
+          inline: true,
+        },
+        {
+          title: languageHandler.language.interactions.signup.confirmation.gearscore,
+          text: player[7],
+          inline: true,
+        },
+      ],
+      components: [row],
+    }));
+  }
+  catch (err) {
+    if(interaction) {
+      console.error('Error sending DM', err);
+      interaction.followUp({content: languageHandler.replaceArgs(languageHandler.language.interactions.signup.error.dmChannel, [interaction.member.user.id]), ephemeral: true});
+    }
+  }
 }
 
 export default {

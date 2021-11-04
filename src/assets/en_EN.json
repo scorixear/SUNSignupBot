@@ -116,7 +116,8 @@
         "reactTime_desc": "You took too long to select an emoji. Please click on `Edit` again.",
         "name_timeout_desc": "You took too long to enter your name. Please sign up again!",
         "level_timeout_desc": "You took too long to enter your level. Please sign up again!",
-        "gearscore_timeout_desc": "You took too long to enter your gear score. Please sign up again!"
+        "gearscore_timeout_desc": "You took too long to enter your gear score. Please sign up again!",
+        "dmChannel": "<@$0> Seems like I am not allowed to send you a message. Make sure you allow users from this server to send you messages in the `Server Privacy Settings`"
       }
     },
     "signout": {
