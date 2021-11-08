@@ -32,14 +32,14 @@ declare const interactionHandler: InteractionHandler;
         const signups = await global.sqlHandler.getSignups(eventId);
 
         const players: string[][] = await sheetHelper.getSheetData();
-        const roles: string[][] = new Array(roleOptions.length);
+        const roles: {name: string, date: number}[][] = new Array(roleOptions.length);
         for(let x : number = 0; x < roleOptions.length; x++) {
-          roles[x] = new Array<string>();
+          roles[x] = new Array<{name: string, date: number}>();
         }
-        for (const userId of signups) {
-          const member = await guild.members.fetch(userId);
+        for (const user of signups) {
+          const member = await guild.members.fetch(user.userId);
           let username;
-          const playerData = players.find((subarray)=> subarray[1]=== userId);
+          const playerData = players.find((subarray)=> subarray[1]=== user.userId);
           if(!playerData) {
             continue;
           }
@@ -50,13 +50,14 @@ declare const interactionHandler: InteractionHandler;
           }
           const index = roleOptions.findIndex(role=> role.value === playerData[4]);
           if(index >= 0) {
-            roles[index].push(username);
+            roles[index].push({name: username, date: user.date});
           }
         }
         embed.fields[2].value = signups.length.toString();
         for (let i:number = 0; i < roleOptions.length; i++) {
+          roles[i].sort((a,b)=> a.date - b.date);
           embed.fields[i+3].name = `${roleOptions[i].label} (${roles[i].length}):`;
-          embed.fields[i+3].value = roles[i].length>0?roles[i].join('\n'):'\u200b';
+          embed.fields[i+3].value = roles[i].length>0?roles[i].map((value, index) => (index+1) + '.  ' + value.name).join('\n'):'\u200b';
         }
         msg.edit({embeds: [embed], components: msg.components});
       } catch (err) {}

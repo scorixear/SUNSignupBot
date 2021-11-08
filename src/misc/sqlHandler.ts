@@ -22,7 +22,7 @@ export default class SqlHandler {
     try {
       conn = await this.pool.getConnection();
       console.log('DB Connection established');
-      await conn.query('CREATE TABLE IF NOT EXISTS `signup` (`event` VARCHAR(255), `userid` VARCHAR(255), PRIMARY KEY (`event`,`userid`))');
+      await conn.query('CREATE TABLE IF NOT EXISTS `signup` (`event` VARCHAR(255), `userid` VARCHAR(255), `date` BIGINT, PRIMARY KEY (`event`,`userid`))');
       await conn.query('CREATE TABLE IF NOT EXISTS `events` (`id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), `date` BIGINT, `is_closed` BIT DEFAULT 0, PRIMARY KEY(`id`), CONSTRAINT UC_Event UNIQUE (name,date))');
       await conn.query('CREATE TABLE IF NOT EXISTS `messageEvents` (`eventId` VARCHAR(255), `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), PRIMARY KEY(`eventId`))');
       await conn.query('CREATE TABLE IF NOT EXISTS `unavailable` (`eventId` VARCHAR(255), `userId` VARCHAR(255), PRIMARY KEY (`eventId`,`userId`))');
@@ -51,14 +51,14 @@ export default class SqlHandler {
     return returnValue;
   }
 
-  public async signIn(event: string, userid: string) {
+  public async signIn(event: string, userid: string, date: number) {
     let conn;
     let returnValue = true;
     try {
       conn = await this.pool.getConnection();
       const rows = await conn.query(`SELECT event FROM signup WHERE \`event\` = ${conn.escape(event)} AND \`userid\` = ${conn.escape(userid)}`);
       if (!rows || !rows[0]) {
-        await conn.query(`INSERT INTO signup (event, userid) VALUES (${conn.escape(event)}, ${conn.escape(userid)})`);
+        await conn.query(`INSERT INTO signup (event, userid, date) VALUES (${conn.escape(event)}, ${conn.escape(userid)}, ${conn.escape(date)})`);
       } else {
         throw new Error('already signed in');
       }
@@ -93,13 +93,13 @@ export default class SqlHandler {
 
   public async getSignups(eventId: string) {
     let conn;
-    let returnValue: string[] = [];
+    let returnValue: {userId: string, date: number}[] = [];
     try {
       conn = await this.pool.getConnection();
-      const rows = await conn.query(`SELECT userid FROM signup WHERE event = ${conn.escape(eventId)}`);
+      const rows = await conn.query(`SELECT userid, date FROM signup WHERE event = ${conn.escape(eventId)}`);
       if (rows) {
         for (const row of rows) {
-          returnValue.push(row.userid);
+          returnValue.push({userId: row.userid, date: row.date});
         }
       }
     } catch (err) {
