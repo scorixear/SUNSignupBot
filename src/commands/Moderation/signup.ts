@@ -57,7 +57,7 @@ declare const interactionHandler: InteractionHandler;
         for (let i:number = 0; i < roleOptions.length; i++) {
           roles[i].sort((a,b)=> a.date - b.date);
           embed.fields[i+3].name = `${roleOptions[i].label} (${roles[i].length}):`;
-          embed.fields[i+3].value = roles[i].length>0?roles[i].map((value, index) => (index+1) + ' ' + value.name).join('\n'):'\u200b';
+          embed.fields[i+3].value = roles[i].length>0?roles[i].map((value, index) => (index+1) + '.  ' + value.name).join('\n'):'\u200b';
         }
         msg.edit({embeds: [embed], components: msg.components});
       } catch (err) {}

@@ -427,7 +427,7 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
     // If player already registered himself once
     if (player) {
     // update database
-      const success = await sqlHandler.signIn(event, userId);
+      const success = await sqlHandler.signIn(event, userId, Math.floor(Date.now()/1000).toString());
       if (success) {
         await updateSignupMessage(event);
         if (await sqlHandler.isUnavailable(event, userId)) {
