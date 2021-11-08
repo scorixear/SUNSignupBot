@@ -59,13 +59,14 @@ export default class ExpressHandler {
 
     try {
       const returnBody = {players: new Array()};
-      const signups: string[] = await sqlHandler.getSignups(eventId);
+      const signups: {userId: string, date: string}[] = await sqlHandler.getSignups(eventId);
+      signups.sort((a,b)=>parseInt(a.date, 10) - parseInt(b.date, 10));
 
       const data = await googleSheetsHandler.retrieveData();
       const fullSheet: string[][] = data.values?data.values:[[]];
 
-      for (const id of signups) {
-        const player: string[] = fullSheet.find((subarray: string[])=> subarray[1]===id );
+      for (const user of signups) {
+        const player: string[] = fullSheet.find((subarray: string[])=> subarray[1]===user.userId );
         returnBody.players.push({
           name: player[0],
           discord_long_id: player[1],
@@ -75,6 +76,7 @@ export default class ExpressHandler {
           guild: player[5],
           level: player[6],
           gear_score: player[7],
+          date_of_signup: user.date,
         });
       }
       res.status(200).send(returnBody);
