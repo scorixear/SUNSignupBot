@@ -50,7 +50,7 @@ declare const interactionHandler: InteractionHandler;
           }
           const index = roleOptions.findIndex(role=> role.value === playerData[4]);
           if(index >= 0) {
-            roles[index].push({name: username, date: parseInt(user.date, 10)});
+            roles[index].push({name: username, date: user.date});
           }
         }
         embed.fields[2].value = signups.length.toString();

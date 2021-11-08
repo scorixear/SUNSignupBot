@@ -51,7 +51,7 @@ export default class SqlHandler {
     return returnValue;
   }
 
-  public async signIn(event: string, userid: string, date: string) {
+  public async signIn(event: string, userid: string, date: number) {
     let conn;
     let returnValue = true;
     try {
@@ -93,7 +93,7 @@ export default class SqlHandler {
 
   public async getSignups(eventId: string) {
     let conn;
-    let returnValue: {userId: string, date: string}[] = [];
+    let returnValue: {userId: string, date: number}[] = [];
     try {
       conn = await this.pool.getConnection();
       const rows = await conn.query(`SELECT userid, date FROM signup WHERE event = ${conn.escape(eventId)}`);

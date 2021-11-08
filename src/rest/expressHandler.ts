@@ -59,8 +59,8 @@ export default class ExpressHandler {
 
     try {
       const returnBody = {players: new Array()};
-      const signups: {userId: string, date: string}[] = await sqlHandler.getSignups(eventId);
-      signups.sort((a,b)=>parseInt(a.date, 10) - parseInt(b.date, 10));
+      const signups: {userId: string, date: number}[] = await sqlHandler.getSignups(eventId);
+      signups.sort((a,b)=>a.date - b.date);
 
       const data = await googleSheetsHandler.retrieveData();
       const fullSheet: string[][] = data.values?data.values:[[]];
