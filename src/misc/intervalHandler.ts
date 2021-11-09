@@ -1,4 +1,4 @@
-import { Message, TextChannel } from "discord.js";
+import { Message, MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import dateHandler from "./dateHandler";
 import SqlHandler from "./sqlHandler";
 
@@ -55,8 +55,15 @@ export class IntervalHandlers {
           try {
             const msg: Message = await channel.messages.fetch(message.messageId);
             try {
-              if(msg.components.length > 0) {
-                await msg.edit({embeds: msg.embeds, components: []});
+              if(msg.components.length > 1 || msg.components.length === 0) {
+                const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('Closed')
+                        .setLabel('Closed')
+                        .setStyle('DANGER')
+                        .setDisabled(true));
+                await msg.edit({embeds: msg.embeds, components: [row]});
                 console.log('Removed Buttons for event ' + event);
               }
             } catch (err) {
