@@ -15,10 +15,10 @@ export class IntervalHandlers {
   }
 
   private static async handleMessageDeletion(now: Date) {
-    const sixHours = new Date(now.getTime());
-    sixHours.setHours(sixHours.getHours() - 6);
-    const sixHourEvents: string[] = await sqlHandler.findDeleteEvents(dateHandler.getUTCTimestampFromDate(sixHours).toString());
-    for (const event of sixHourEvents) {
+    const date = new Date(now.getTime());
+    date.setHours(date.getHours() - 1);
+    const events: string[] = await sqlHandler.findDeleteEvents(dateHandler.getUTCTimestampFromDate(date).toString());
+    for (const event of events) {
       const message = await sqlHandler.getMessageEvent(event);
       try {
         const guild = discordHandler.client.guilds.cache.get(message.guildId);
