@@ -7,6 +7,7 @@ import dateHandler from './misc/dateHandler';
 import { Message, TextChannel } from 'discord.js';
 import dotenv from 'dotenv';
 import { LanguageHandler } from './misc/languageHandler';
+import { IntervalHandlers } from './misc/intervalHandler';
 
 // initialize configuration
 dotenv.config();
@@ -40,36 +41,7 @@ sqlHandler.initDB().then(async () => {
   await discordHandler.client.login(process.env.DISCORD_TOKEN).then(()=> new ExpressHandler());
   await interactionHandler.Init();
   console.log('SUN Signup Bot live!')
-  setInterval(async ()=> {
-    const now: Date = new Date();
-    now.setHours(now.getHours() - 6);
-    const events: string[] = await sqlHandler.findDeleteEvents(dateHandler.getUTCTimestampFromDate(now).toString());
-    for (const event of events) {
-      const message = await sqlHandler.getMessageEvent(event);
-      try {
-        const guild = discordHandler.client.guilds.cache.get(message.guildId);
-        try {
-          const channel: TextChannel = (await guild.channels.fetch(message.channelId)) as TextChannel;
-          try {
-            const msg: Message = await channel.messages.fetch(message.messageId);
-            try {
-              msg.delete();
-              console.log('Deleted message for event ' + event);
-            } catch (err) {
-              console.error(`Couldn't delete message for event ${event}`, err);
-              return;
-            }
-          } catch (err) {
-            console.log('Couldn\'t find message for event '+event);
-          }
-        } catch (err) {
-          console.log('Couldn\'t find channel for event '+event);
-        }
-      } catch (err) {
-        console.log('Couldn\'t find guild for event '+event);
-      }
-      sqlHandler.closeEvent(event);
-    }
-  }, 1000*60);
+
+  IntervalHandlers.initInterval();
 });
 
