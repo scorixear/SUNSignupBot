@@ -37,20 +37,13 @@ declare const interactionHandler: InteractionHandler;
           roles[x] = new Array<{name: string, date: number}>();
         }
         for (const user of signups) {
-          const member = await guild.members.fetch(user.userId);
-          let username;
           const playerData = players.find((subarray)=> subarray[1]=== user.userId);
           if(!playerData) {
             continue;
           }
-          if (member) {
-            username = member.nickname ? member.nickname:member.user.username;
-          } else {
-            username = playerData[0];
-          }
           const index = roleOptions.findIndex(role=> role.value === playerData[4]);
           if(index >= 0) {
-            roles[index].push({name: username, date: user.date});
+            roles[index].push({name: playerData[0], date: user.date});
           }
         }
         embed.fields[2].value = signups.length.toString();
