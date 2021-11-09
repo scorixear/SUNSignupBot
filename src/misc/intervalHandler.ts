@@ -55,7 +55,7 @@ export class IntervalHandlers {
           try {
             const msg: Message = await channel.messages.fetch(message.messageId);
             try {
-              if(msg.components.length > 1 || msg.components.length === 0) {
+              if(msg.components.length === 0 || msg.components[0].components.length > 1) {
                 const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
