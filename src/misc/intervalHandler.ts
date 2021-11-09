@@ -7,7 +7,6 @@ declare const sqlHandler: SqlHandler;
 export class IntervalHandlers {
   public static initInterval() {
     setInterval(async () => {
-      console.log('Finding removal Messages');
       const now: Date = new Date();
       await this.handleMessageDeletion(now);
       await this.handleButtonRemoval(now);
