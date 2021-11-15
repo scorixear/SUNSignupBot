@@ -11,6 +11,7 @@ import signup from '../../interactions/signup';
 import { LanguageHandler } from '../../misc/languageHandler.js';
 import SqlHandler from '../../misc/sqlHandler.js';
 import InteractionHandler from '../../misc/interactionHandler.js';
+import User from '../../model/user.js';
 
 declare const languageHandler: LanguageHandler;
 declare const sqlHandler: SqlHandler;
@@ -31,19 +32,19 @@ declare const interactionHandler: InteractionHandler;
         const embed = msg.embeds[0];
         const signups = await global.sqlHandler.getSignups(eventId);
 
-        const players: string[][] = await sheetHelper.getSheetData();
+        const players: User[] = await sqlHandler.getUsers();
         const roles: {name: string, date: number}[][] = new Array(roleOptions.length);
         for(let x : number = 0; x < roleOptions.length; x++) {
           roles[x] = new Array<{name: string, date: number}>();
         }
         for (const user of signups) {
-          const playerData = players.find((subarray)=> subarray[1]=== user.userId);
+          const playerData = players.find((sqlUser)=> sqlUser.userId === user.userId);
           if(!playerData) {
             continue;
           }
-          const index = roleOptions.findIndex(role=> role.value === playerData[4]);
+          const index = roleOptions.findIndex(role=> role.value === playerData.role);
           if(index >= 0) {
-            roles[index].push({name: playerData[0], date: user.date});
+            roles[index].push({name: playerData.name, date: user.date});
           }
         }
         embed.fields[2].value = signups.length.toString();

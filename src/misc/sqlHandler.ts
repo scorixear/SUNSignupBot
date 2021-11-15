@@ -1,4 +1,5 @@
 import mariadb from 'mariadb';
+import User from '../model/user';
 
 export default class SqlHandler {
   private pool: mariadb.Pool;
@@ -26,6 +27,7 @@ export default class SqlHandler {
       await conn.query('CREATE TABLE IF NOT EXISTS `events` (`id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(255), `date` BIGINT, `is_closed` BIT DEFAULT 0, PRIMARY KEY(`id`), CONSTRAINT UC_Event UNIQUE (name,date))');
       await conn.query('CREATE TABLE IF NOT EXISTS `messageEvents` (`eventId` VARCHAR(255), `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), PRIMARY KEY(`eventId`))');
       await conn.query('CREATE TABLE IF NOT EXISTS `unavailable` (`eventId` VARCHAR(255), `userId` VARCHAR(255), PRIMARY KEY (`eventId`,`userId`))');
+      await conn.query('CREATE TABLE IF NOT EXISTS `users` (`userId` VARCHAR(255), `name` VARCHAR(255), `weapon1` VARCHAR(255), `weapon2` VARCHAR(255), `role` VARCHAR(255), `guild` VARCHAR(255), `level` INT, `gearscore` INT, PRIMARY KEY(`userId`))');
     } catch (error) {
       throw error;
     } finally {
@@ -332,6 +334,122 @@ export default class SqlHandler {
       }
     } catch (err) {
       returnValue = [];
+      console.error(err);
+    } finally {
+      if (conn) await conn.end();
+    }
+    return returnValue;
+  }
+
+  public async getUsers() {
+    let conn;
+    let returnValue: User[] = [];
+    try {
+      conn = await this.pool.getConnection();
+      const rows = await conn.query(`SELECT * from users`);
+      if(rows) {
+        for(const row of rows) {
+          returnValue.push({
+            userId: row.userId,
+            name: row.name,
+            weapon1: row.weapon1,
+            weapon2: row.weapon2,
+            role: row.role,
+            guild: row.guild,
+            level: row.level,
+            gearscore: row.gearscore
+          });
+        }
+      }
+    } catch (err) {
+      returnValue = [];
+      console.error(err);
+    } finally {
+      if (conn) await conn.end();
+    }
+    return returnValue;
+  }
+
+
+  public async getUserById(userId: string) {
+    let conn;
+    let returnValue: User;
+    try {
+      conn = await this.pool.getConnection();
+      const rows = await conn.query(`SELECT * FROM users WHERE userId = ${conn.escape(userId)}`);
+      if(rows && rows[0]) {
+        returnValue = {
+          userId,
+          name: rows[0].name,
+          weapon1: rows[0].weapon1,
+          weapon2: rows[0].weapon2,
+          role: rows[0].role,
+          guild: rows[0].guild,
+          level: rows[0].level,
+          gearscore: rows[0].gearscore,
+        };
+      }
+    } catch (err) {
+      returnValue = undefined;
+      console.error(err);
+    } finally {
+      if (conn) await conn.end();
+    }
+    return returnValue;
+  }
+
+  public async getUserByName(name: string) {
+    let conn;
+    let returnValue: User;
+    try {
+      conn = await this.pool.getConnection();
+      const rows = await conn.query(`SELECT * FROM users WHERE name = ${conn.escape(name)}`);
+      if(rows && rows[0]) {
+        returnValue = {
+          userId: rows[0].userId,
+          name,
+          weapon1: rows[0].weapon1,
+          weapon2: rows[0].weapon2,
+          role: rows[0].role,
+          guild: rows[0].guild,
+          level: rows[0].level,
+          gearscore: rows[0].gearscore,
+        };
+      }
+    } catch (err) {
+      returnValue = undefined;
+      console.error(err);
+    } finally {
+      if (conn) await conn.end();
+    }
+    return returnValue;
+  }
+
+  public async updateUser(user: User) {
+    let conn;
+    let returnValue: boolean;
+    try {
+      conn = await this.pool.getConnection();
+      await conn.query(`UPDATE users SET name = ${conn.escape(user.name)}, weapon1 = ${conn.escape(user.weapon1)}, weapon2 = ${conn.escape(user.weapon2)}, role = ${conn.escape(user.role)}, guild = ${conn.escape(user.guild)}, level = ${conn.escape(user.level)}, gearscore = ${conn.escape(user.gearscore)} WHERE userId = ${conn.escape(user.userId)}`);
+      returnValue = true;
+    } catch (err) {
+      returnValue = false;
+      console.error(err);
+    } finally {
+      if (conn) await conn.end();
+    }
+    return returnValue;
+  }
+
+  public async addUser(user: User) {
+    let conn;
+    let returnValue: boolean;
+    try {
+      conn = await this.pool.getConnection();
+      await conn.query(`INSERT INTO users (userId, name, weapon1, weapon2, role, guild, level, gearscore) VALUES (${conn.escape(user.userId)}, ${conn.escape(user.name)}, ${conn.escape(user.weapon1)}, ${conn.escape(user.weapon2)}, ${conn.escape(user.role)}, ${conn.escape(user.guild)}, ${conn.escape(user.level)}, ${conn.escape(user.gearscore)})`);
+      returnValue = true;
+    } catch (err) {
+      returnValue = false;
       console.error(err);
     } finally {
       if (conn) await conn.end();

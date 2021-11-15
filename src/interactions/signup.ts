@@ -10,17 +10,16 @@ import { ButtonInteractionHandle, SelectMenuInteractionHandle } from './interact
 import SqlHandler from '../misc/sqlHandler';
 import { LanguageHandler } from '../misc/languageHandler';
 import InteractionHandler from '../misc/interactionHandler';
-import GoogleSheetsHandler from '../misc/googleSheetsHandler';
+import User from '../model/user';
 
 declare const sqlHandler: SqlHandler;
 declare const languageHandler: LanguageHandler;
 declare const interactionHandler: InteractionHandler;
-declare const googleSheetsHandler: GoogleSheetsHandler;
 
 /**
  * Local Storage for ongoing Signups
  */
- const userRegistration: Map<string, {name?: string, weapon1?: string, weapon2?: string, role?: string, guild?: string, level?: string, gearscore?: string}> = new Map();
+ const userRegistration: Map<string, User> = new Map();
 
  const userSignup: Set<string> = new Set();
 
@@ -73,7 +72,7 @@ class SignupEvent extends ButtonInteractionHandle {
     const channel = await (interaction.member as GuildMember).createDM();
     const event = interaction.customId.slice(this.id.length);
     console.log('Signup request received', userId, event);
-    const player = await sheetHelper.getRowFromSheet(userId);
+    const player = await sqlHandler.getUserById(userId);
     // If player already registered himself once
     if (player) {
       // check if sql database has him signed up
@@ -130,7 +129,7 @@ class SignupEvent extends ButtonInteractionHandle {
  */
 async function signupName(userId: string, event: string, msg: Message, update: boolean) {
   // save name in temporary map to update google sheet later at once
-  userRegistration.set(userId, {name: msg.content});
+  userRegistration.set(userId, new User(userId, msg.content));
 
   let customId: string = interactionHandler.selectMenuInteractions.typeGet(SignupWeapon1Event);
   if (update) {
@@ -353,7 +352,14 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
   * Called when Level was collected
   */
  async function signupLevel(userId: string, channel: TextBasedChannels, event: string, msg: Message, isUpdate: boolean) {
-   userRegistration.get(userId).level = msg.content;
+   let level: number;
+   try {
+    level = parseInt(msg.content, 10);
+   } catch (err) {
+     signupFinished(userId);
+     return;
+   }
+   userRegistration.get(userId).level = level;
 
    // send "get name" message to user
    const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
@@ -378,30 +384,27 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
  async function signupGearscore(userId: string, channel: TextBasedChannels, event: string, content: string, isUpdate: boolean) {
    // retrieve local stored user data
    const userData = userRegistration.get(userId);
-   userData.gearscore = content;
+
+   let gearscore: number;
+   try {
+    gearscore = parseInt(content, 10);
+   } catch (err) {
+     signupFinished(userId);
+     return;
+   }
+   userData.gearscore = gearscore;
 
    try {
     // if call is to update sheet
     if (isUpdate) {
-      // retrieve row index in sheet
-      const playerIndex = await sheetHelper.getIndexFromSheet(userId);
-      await sheetHelper.updateRowInSheet([userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore], playerIndex);
+      const successfull = await sqlHandler.updateUser(userData);
       console.log('Google Sheet User Updated', userId, event);
     } else {
-      // append new Row to sheet
-      await googleSheetsHandler.appendData({range: process.env.GOOGLESHEETSRANGE, values: [[
-        userData.name,
-        userId,
-        userData.weapon1,
-        userData.weapon2,
-        userData.role,
-        userData.guild,
-        userData.level,
-        userData.gearscore]]});
+      const successfull = await sqlHandler.addUser(userData);
       console.log('Google Sheet User Registered', userId, event);
     }
       // send confirmation message about changed / registered information
-      await sheetHelper.sendConfirmationMessage(event, channel, [userData.name, userId, userData.weapon1, userData.weapon2, userData.role, userData.guild, userData.level, userData.gearscore]);
+      await sheetHelper.sendConfirmationMessage(event, channel, userData);
    } catch (err) {
      console.error(err);
      signupFinished(userId);
@@ -423,7 +426,7 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
     (interaction.message as Message).delete();
     // interactionsHelper.deleteLastMessage(channel);
 
-    const player = await sheetHelper.getRowFromSheet(userId);
+    const player = await sqlHandler.getUserById(userId);
     // If player already registered himself once
     if (player) {
     // update database
@@ -443,8 +446,8 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
         }));
         console.log('User signed up', userId, event);
       }
-      signupFinished(userId);
     }
+    signupFinished(userId);
   }
 }
 
@@ -457,7 +460,7 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
     (interaction.message as Message).delete();
     // interactionsHelper.deleteLastMessage(channel);
 
-    const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
+    const player = await sqlHandler.getUserById(interaction.user.id);
 
     const msg = await channel.send(await messageHandler.getRichTextExplicitDefault({
       title: languageHandler.language.interactions.signup.edit_title,
@@ -465,37 +468,37 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
       categories: [
         {
           title: languageHandler.language.interactions.signup.confirmation.name,
-          text: '1️⃣ '+player[0],
+          text: '1️⃣ '+player.name,
           inline: true,
         },
         {
           title: languageHandler.language.interactions.signup.confirmation.weapon1,
-          text: '2️⃣ '+player[2],
+          text: '2️⃣ '+player.weapon1,
           inline: true,
         },
         {
           title: languageHandler.language.interactions.signup.confirmation.weapon2,
-          text: '3️⃣ '+player[3],
+          text: '3️⃣ '+player.weapon2,
           inline: true,
         },
         {
           title: languageHandler.language.interactions.signup.confirmation.role,
-          text: '4️⃣ '+player[4],
+          text: '4️⃣ '+player.role,
           inline: true,
         },
         {
           title: languageHandler.language.interactions.signup.confirmation.guild,
-          text: '5️⃣ '+player[5],
+          text: '5️⃣ '+player.guild,
           inline: true,
         },
         {
           title: languageHandler.language.interactions.signup.confirmation.level,
-          text: '6️⃣ '+player[6],
+          text: '6️⃣ '+player.level,
           inline: true,
         },
         {
           title: languageHandler.language.interactions.signup.confirmation.gearscore,
-          text: '7️⃣ '+player[7],
+          text: '7️⃣ '+player.gearscore,
           inline: true,
         },
         {
@@ -523,7 +526,7 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
           // console.log(collected);
           switch (collected.firstKey()) {
             case '1️⃣':
-              await editHandler.editName(channel, event, player, playerIndex, interaction.user.id);
+              await editHandler.editName(channel, event, player);
               break;
             case '2️⃣':
               await editHandler.editWeapon1(channel, event);
@@ -538,10 +541,10 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
               await editHandler.editGuild(channel, event);
               break;
             case '6️⃣':
-              await editHandler.editLevel(channel, event, player, playerIndex, interaction.user.id);
+              await editHandler.editLevel(channel, event, player);
               break;
             case '7️⃣':
-              await editHandler.editGearscore(channel, event, player, playerIndex, interaction.user.id);
+              await editHandler.editGearscore(channel, event, player);
               break;
             case '8️⃣':
               const message = await channel.send(await messageHandler.getRichTextExplicitDefault({

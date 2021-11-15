@@ -7,6 +7,8 @@ import messageCollectorHandler from './messageCollectorHandler';
 import { ButtonInteractionHandle, SelectMenuInteractionHandle } from './interactionHandles';
 import { LanguageHandler } from '../misc/languageHandler';
 import InteractionHandler from '../misc/interactionHandler';
+import User from '../model/user';
+import { parse } from 'dotenv';
 
 declare const languageHandler: LanguageHandler;
 declare const interactionHandler: InteractionHandler;
@@ -14,7 +16,7 @@ declare const interactionHandler: InteractionHandler;
 /**
  * Called to collect name
  */
-async function editName(channel: TextBasedChannels, event: string, player: string[], playerIndex: number, userId: string) {
+async function editName(channel: TextBasedChannels, event: string, player: User) {
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: languageHandler.language.interactions.signup.edit.name_title,
@@ -26,9 +28,11 @@ async function editName(channel: TextBasedChannels, event: string, player: strin
       message,
       languageHandler.language.interactions.signup.edit.error.name_timeout_desc,
       async (msg)=>{
-        await sheetHelper.updateCellInSheet([0, msg.content], event, channel, player, playerIndex);
+        player.name = msg.content;
+        await sqlHandler.updateUser(player);
+        sheetHelper.sendConfirmationMessage(event, channel, player);
       },
-      userId,
+      player.userId,
   );
 }
 
@@ -57,8 +61,10 @@ class EditWeapon1Event extends SelectMenuInteractionHandle {
     const value = interaction.values[0];
     (interaction.message as Message).delete();
     // interactionsHelper.deleteLastMessage(interaction.channel);
-    const [playerIndex, player]= await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
-    await sheetHelper.updateCellInSheet([2, value], interaction.customId.slice(this.id.length), interaction.channel, player, playerIndex);
+    const player = await sqlHandler.getUserById(interaction.user.id);
+    player.weapon1 = value;
+    await sqlHandler.updateUser(player);
+    sheetHelper.sendConfirmationMessage(interaction.customId.slice(this.id.length), interaction.channel, player);
   }
 }
 
@@ -87,8 +93,10 @@ class EditWeapon2Event extends SelectMenuInteractionHandle {
     const value = interaction.values[0];
     (interaction.message as Message).delete();
     // interactionsHelper.deleteLastMessage(interaction.channel);
-    const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
-    await sheetHelper.updateCellInSheet([3, value], interaction.customId.slice(this.id.length), interaction.channel, player, playerIndex);
+    const player = await sqlHandler.getUserById(interaction.user.id);
+    player.weapon2 = value;
+    await sqlHandler.updateUser(player);
+    sheetHelper.sendConfirmationMessage(interaction.customId.slice(this.id.length), interaction.channel, player);
   }
 }
 
@@ -117,8 +125,10 @@ class EditRoleEvent extends SelectMenuInteractionHandle {
     const value = interaction.values[0];
     (interaction.message as Message).delete();
     // interactionsHelper.deleteLastMessage(interaction.channel);
-    const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
-    await sheetHelper.updateCellInSheet([4, value], interaction.customId.slice(this.id.length), interaction.channel, player, playerIndex);
+    const player = await sqlHandler.getUserById(interaction.user.id);
+    player.role = value;
+    await sqlHandler.updateUser(player);
+    sheetHelper.sendConfirmationMessage(interaction.customId.slice(this.id.length), interaction.channel, player);
   }
 }
 
@@ -147,8 +157,10 @@ class EditGuildEvent extends SelectMenuInteractionHandle {
     const value = interaction.values[0];
     (interaction.message as Message).delete();
     // interactionsHelper.deleteLastMessage(interaction.channel);
-    const [playerIndex, player] = await sheetHelper.getIndexAndRowFromSheet(interaction.user.id);
-    await sheetHelper.updateCellInSheet([5, value], interaction.customId.slice(this.id.length), interaction.channel, player, playerIndex);
+    const player = await sqlHandler.getUserById(interaction.user.id);
+    player.guild = value;
+    await sqlHandler.updateUser(player);
+    sheetHelper.sendConfirmationMessage(interaction.customId.slice(this.id.length), interaction.channel, player);
   }
 }
 
@@ -156,7 +168,7 @@ class EditGuildEvent extends SelectMenuInteractionHandle {
 /**
  * Called to select Level
  */
-async function editLevel(channel: TextBasedChannels, event: string, player: string[], playerIndex: number, userId: string) {
+async function editLevel(channel: TextBasedChannels, event: string, player: User) {
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: languageHandler.language.interactions.signup.edit.level_title,
@@ -168,16 +180,18 @@ async function editLevel(channel: TextBasedChannels, event: string, player: stri
       message,
       languageHandler.language.interactions.signup.edit.error.level_timeout_desc,
       async (msg)=>{
-        await sheetHelper.updateCellInSheet([6, msg.content], event, channel, player, playerIndex);
+        player.level = parseInt(msg.content, 10);
+        await sqlHandler.updateUser(player);
+        sheetHelper.sendConfirmationMessage(event, channel, player);
       },
-      userId,
+      player.userId,
   );
 }
 
 /**
  * Called to select Gearscore
  */
-async function editGearscore(channel: TextBasedChannels, event: string, player: string[], playerIndex: number, userId: string) {
+async function editGearscore(channel: TextBasedChannels, event: string, player: User) {
   // send "get name" message to user
   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
     title: languageHandler.language.interactions.signup.edit.gearscore_title,
@@ -189,9 +203,11 @@ async function editGearscore(channel: TextBasedChannels, event: string, player: 
       message,
       languageHandler.language.interactions.signup.edit.error.gearscore_timeout_desc,
       async (msg)=>{
-        await sheetHelper.updateCellInSheet([7, msg.content], event, channel, player, playerIndex);
+        player.gearscore = parseInt(msg.content, 10);
+        await sqlHandler.updateUser(player);
+        sheetHelper.sendConfirmationMessage(event, channel, player);
       },
-      userId,
+      player.userId,
   );
 }
 

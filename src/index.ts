@@ -1,5 +1,4 @@
 import DiscordHandler from './misc/discordHandler';
-import GoogleSheetsHandler from './misc/googleSheetsHandler';
 import InteractionHandler from './misc/interactionHandler';
 import SqlHandler from './misc/sqlHandler';
 import ExpressHandler from './rest/expressHandler';
@@ -15,12 +14,10 @@ dotenv.config();
 declare global {
   var discordHandler: DiscordHandler;
   var sqlHandler: SqlHandler;
-  var googleSheetsHandler: GoogleSheetsHandler;
   var languageHandler: LanguageHandler;
   var interactionHandler: InteractionHandler;
 }
 global.languageHandler = new LanguageHandler();
-global.googleSheetsHandler = new GoogleSheetsHandler();
 global.interactionHandler = new InteractionHandler();
 global.discordHandler = new DiscordHandler();
 global.sqlHandler = new SqlHandler();
