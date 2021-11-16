@@ -71,8 +71,8 @@ export default class ExpressHandler {
           weapon_2: player.weapon2,
           role: player.role,
           guild: player.guild,
-          level: player.level,
-          gear_score: player.gearscore,
+          level: player.level.toString(),
+          gear_score: player.gearscore.toString(),
           date_of_signup: user.date,
         });
       }
