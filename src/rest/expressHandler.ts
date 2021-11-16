@@ -1,11 +1,9 @@
 import express, {Request, Response} from 'express';
 import config from '../config';
-import GoogleSheetsHandler from '../misc/googleSheetsHandler';
 import SqlHandler from '../misc/sqlHandler';
 import dateHandler from '../misc/dateHandler';
 
 declare const sqlHandler: SqlHandler;
-declare const googleSheetsHandler: GoogleSheetsHandler;
 
 export default class ExpressHandler {
   private app;
@@ -62,20 +60,19 @@ export default class ExpressHandler {
       const signups: {userId: string, date: number}[] = await sqlHandler.getSignups(eventId);
       signups.sort((a,b)=>a.date - b.date);
 
-      const data = await googleSheetsHandler.retrieveData();
-      const fullSheet: string[][] = data.values?data.values:[[]];
+      const data = await sqlHandler.getUsers();
 
       for (const user of signups) {
-        const player: string[] = fullSheet.find((subarray: string[])=> subarray[1]===user.userId );
+        const player = data.find((sqlUser)=> sqlUser.userId === user.userId );
         returnBody.players.push({
-          name: player[0],
-          discord_long_id: player[1],
-          weapon_1: player[2],
-          weapon_2: player[3],
-          role: player[4],
-          guild: player[5],
-          level: player[6],
-          gear_score: player[7],
+          name: player.name,
+          discord_long_id: player.userId,
+          weapon_1: player.weapon1,
+          weapon_2: player.weapon2,
+          role: player.role,
+          guild: player.guild,
+          level: player.level,
+          gear_score: player.gearscore,
           date_of_signup: user.date,
         });
       }
