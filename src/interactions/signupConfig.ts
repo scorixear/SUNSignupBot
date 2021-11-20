@@ -43,6 +43,10 @@ export const weaponOptions = [
     label: 'Ice Gauntlet',
     value: 'Ice Gauntlet',
   },
+  {
+    label: 'Void Gauntlet',
+    value: 'Void Gauntlet',
+  },
 ];
 export const roleOptions = [{
   label: 'Tank',
