@@ -351,25 +351,36 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
  /**
   * Called when Level was collected
   */
- async function signupLevel(userId: string, channel: TextBasedChannels, event: string, msg: Message, isUpdate: boolean) {
-   let level: number;
-   try {
-    level = parseInt(msg.content, 10);
-   } catch (err) {
-     signupFinished(userId);
-     return;
+ async function signupLevel(userId: string, channel: TextBasedChannels, event: string, message: Message, isUpdate: boolean) {
+   const level = parseInt(message.content, 10);
+   if (isNaN(level)) {
+    const errorMessage = await messageHandler.sendRichTextDefaultExplicit({
+      channel,
+      title: languageHandler.language.interactions.signup.edit.not_a_number,
+      description: languageHandler.language.interactions.signup.edit.level_num_desc,
+    });
+    messageCollectorHandler.createMessageCollector(
+      channel,
+      errorMessage,
+      languageHandler.language.interactions.signup.error.level_timeout_desc,
+      async(collectedMessage) => {
+         await signupLevel(userId, channel, event, collectedMessage, isUpdate);
+      },
+      userId
+    );
+    return;
    }
    userRegistration.get(userId).level = level;
 
    // send "get name" message to user
-   const message = await channel.send(await messageHandler.getRichTextExplicitDefault({
+   const gearScoreMessage = await channel.send(await messageHandler.getRichTextExplicitDefault({
      title: languageHandler.language.interactions.signup.edit.gearscore_title,
      description: languageHandler.language.interactions.signup.edit.gearscore_desc,
    }));
 
    messageCollectorHandler.createMessageCollector(
        channel,
-       message,
+       gearScoreMessage,
        languageHandler.language.interactions.signup.error.gearscore_timeout_desc,
        async (collectedMessage)=> {
          await signupGearscore(userId, channel, event, collectedMessage.content, isUpdate);
@@ -385,23 +396,43 @@ class SignupUpdateGuildEvent extends SelectMenuInteractionHandle {
    // retrieve local stored user data
    const userData = userRegistration.get(userId);
 
-   let gearscore: number;
-   try {
-    gearscore = parseInt(content, 10);
-   } catch (err) {
-     signupFinished(userId);
-     return;
+   const gearscore = parseInt(content, 10);
+   if (isNaN(gearscore)) {
+    const errorMessage = await messageHandler.sendRichTextDefaultExplicit({
+      channel,
+      title: languageHandler.language.interactions.signup.edit.not_a_number,
+      description: languageHandler.language.interactions.signup.edit.gearscore_num_desc,
+    });
+    messageCollectorHandler.createMessageCollector(
+      channel,
+      errorMessage,
+      languageHandler.language.interactions.signup.error.gearscore_timeout_desc,
+      async(collectedMessage) => {
+         await signupGearscore(userId, channel, event, collectedMessage.content, isUpdate);
+      },
+      userId
+    );
+    return;
    }
    userData.gearscore = gearscore;
 
    try {
+     let successfull;
     // if call is to update sheet
     if (isUpdate) {
-      const successfull = await sqlHandler.updateUser(userData);
-      console.log('Google Sheet User Updated', userId, event);
+      successfull = await sqlHandler.updateUser(userData);
+      console.log('SQL User Updated', userId, event);
     } else {
-      const successfull = await sqlHandler.addUser(userData);
-      console.log('Google Sheet User Registered', userId, event);
+      successfull = await sqlHandler.addUser(userData);
+      console.log('SQL User Registered', userId, event);
+    }
+    if(!successfull) {
+      await messageHandler.sendRichTextDefaultExplicit({
+        channel,
+        title: languageHandler.language.interactions.signup.error.sql,
+        description: languageHandler.language.interactions.signup.error.sql_desc,
+      });
+      throw Error("Unsuccessfull sql registration");
     }
       // send confirmation message about changed / registered information
       await sheetHelper.sendConfirmationMessage(event, channel, userData);

@@ -101,8 +101,11 @@
         "guild_desc": "Please select your ingame guild",
         "level_title": "Level",
         "level_desc": "Please enter your current Level",
+        "not_a_number": "Not a number",
+        "level_num_desc": "Please enter your current Level **as a number**",
         "gearscore_title": "Gear Score",
         "gearscore_desc": "Please enter your current Gear Score",
+        "gearscore_num_desc": "Please enter your current Gear Score **as a number**",
         "everything_title": "Everything",
         "everything_desc": "Update every Information",
         "error": {
@@ -117,7 +120,9 @@
         "name_timeout_desc": "You took too long to enter your name. Please sign up again!",
         "level_timeout_desc": "You took too long to enter your level. Please sign up again!",
         "gearscore_timeout_desc": "You took too long to enter your gear score. Please sign up again!",
-        "dmChannel": "<@$0> Seems like I am not allowed to send you a message. Make sure you allow users from this server to send you messages in the `Server Privacy Settings`"
+        "dmChannel": "<@$0> Seems like I am not allowed to send you a message. Make sure you allow users from this server to send you messages in the `Server Privacy Settings`",
+        "sql": "Registration Error",
+        "sql_desc": "There was an error saving your data.\nPlease contact Scorix#0001 with a screenshot of this conversation."
       }
     },
     "signout": {
