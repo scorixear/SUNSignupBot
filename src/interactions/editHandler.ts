@@ -180,12 +180,33 @@ async function editLevel(channel: TextBasedChannels, event: string, player: User
       message,
       languageHandler.language.interactions.signup.edit.error.level_timeout_desc,
       async (msg)=>{
-        player.level = parseInt(msg.content, 10);
-        await sqlHandler.updateUser(player);
-        sheetHelper.sendConfirmationMessage(event, channel, player);
+        parseLevel(channel, event, player, msg);
       },
       player.userId,
   );
+}
+
+async function parseLevel(channel: TextBasedChannels, event: string, player: User, msg: Message) {
+  player.level = parseInt(msg.content, 10);
+  if(isNaN(player.level)) {
+    const errorMessage = await messageHandler.sendRichTextDefaultExplicit({
+      channel,
+      title: languageHandler.language.interactions.signup.edit.not_a_number,
+      description: languageHandler.language.interactions.signup.edit.level_num_desc,
+    });
+    messageCollectorHandler.createMessageCollector(
+      channel,
+      errorMessage,
+      languageHandler.language.interactions.signup.edit.error.level_timeout_desc,
+      async (collectedMessage) => {
+        await parseLevel(channel, event, player, collectedMessage);
+      },
+      player.userId,
+    );
+  } else {
+    await sqlHandler.updateUser(player);
+    sheetHelper.sendConfirmationMessage(event, channel, player);
+  }
 }
 
 /**
@@ -203,12 +224,33 @@ async function editGearscore(channel: TextBasedChannels, event: string, player: 
       message,
       languageHandler.language.interactions.signup.edit.error.gearscore_timeout_desc,
       async (msg)=>{
-        player.gearscore = parseInt(msg.content, 10);
-        await sqlHandler.updateUser(player);
-        sheetHelper.sendConfirmationMessage(event, channel, player);
+        parseGearscore(channel, event, player, msg);
       },
       player.userId,
   );
+}
+
+async function parseGearscore(channel: TextBasedChannels, event: string, player: User, msg: Message) {
+  player.gearscore = parseInt(msg.content, 10);
+  if(isNaN(player.gearscore)) {
+    const errorMessage = await messageHandler.sendRichTextDefaultExplicit({
+      channel,
+      title: languageHandler.language.interactions.signup.edit.not_a_number,
+      description: languageHandler.language.interactions.signup.edit.gearscore_num_desc,
+    });
+    messageCollectorHandler.createMessageCollector(
+      channel,
+      errorMessage,
+      languageHandler.language.interactions.signup.edit.error.gearscore_timeout_desc,
+      async (collectedMessage) => {
+        await parseGearscore(channel, event, player, collectedMessage);
+      },
+      player.userId,
+    );
+  } else {
+    await sqlHandler.updateUser(player);
+    sheetHelper.sendConfirmationMessage(event, channel, player);
+  }
 }
 
 export default {

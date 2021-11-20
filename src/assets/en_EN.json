@@ -101,8 +101,11 @@
         "guild_desc": "Please select your ingame guild",
         "level_title": "Level",
         "level_desc": "Please enter your current Level",
+        "not_a_number": "Not a number",
+        "level_num_desc": "Please enter your current Level **as a number**",
         "gearscore_title": "Gear Score",
         "gearscore_desc": "Please enter your current Gear Score",
+        "gearscore_num_desc": "Please enter your current Gear Score **as a number**",
         "everything_title": "Everything",
         "everything_desc": "Update every Information",
         "error": {
