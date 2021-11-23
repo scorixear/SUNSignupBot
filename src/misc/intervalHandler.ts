@@ -1,5 +1,6 @@
 import { Message, MessageActionRow, MessageButton, TextChannel } from "discord.js";
 import dateHandler from "./dateHandler";
+import messageHandler from "./messageHandler";
 import SqlHandler from "./sqlHandler";
 
 declare const sqlHandler: SqlHandler;
@@ -10,6 +11,7 @@ export class IntervalHandlers {
       const now: Date = new Date();
       await this.handleMessageDeletion(now);
       await this.handleButtonRemoval(now);
+      await this.handleReminder(now);
     }, 1000*60);
   }
 
@@ -18,28 +20,15 @@ export class IntervalHandlers {
     date.setHours(date.getHours() - 1);
     const events: string[] = await sqlHandler.findDeleteEvents(dateHandler.getUTCTimestampFromDate(date).toString());
     for (const event of events) {
-      const message = await sqlHandler.getMessageEvent(event);
-      try {
-        const guild = discordHandler.client.guilds.cache.get(message.guildId);
+      const msg = await this.getMessageForEvent(event);
+      if(msg) {
         try {
-          const channel: TextChannel = (await guild.channels.fetch(message.channelId)) as TextChannel;
-          try {
-            const msg: Message = await channel.messages.fetch(message.messageId);
-            try {
-              await msg.delete();
-              console.log('Deleted message for event ' + event);
-            } catch (err) {
-              console.error(`Couldn't delete message for event ${event}`, err);
-              continue;
-            }
-          } catch (err) {
-            console.log('Couldn\'t find message for event '+event);
-          }
+          await msg.delete();
+          console.log('Deleted message for event ' + event);
         } catch (err) {
-          console.log('Couldn\'t find channel for event '+event);
+          console.error(`Couldn't delete message for event ${event}`, err);
+          continue;
         }
-      } catch (err) {
-        console.log('Couldn\'t find guild for event '+event);
       }
       sqlHandler.closeEvent(event);
     }
@@ -47,38 +36,80 @@ export class IntervalHandlers {
   private static async handleButtonRemoval(now: Date) {
     const events: string[] = await sqlHandler.findDeleteEvents(dateHandler.getUTCTimestampFromDate(now).toString());
     for(const event of events) {
-      const message = await sqlHandler.getMessageEvent(event);
-      try {
-        const guild = discordHandler.client.guilds.cache.get(message.guildId);
+      const msg = await this.getMessageForEvent(event);
+      if(msg) {
         try {
-          const channel: TextChannel = (await guild.channels.fetch(message.channelId)) as TextChannel;
-          try {
-            const msg: Message = await channel.messages.fetch(message.messageId);
-            try {
-              if(msg.components.length === 0 || msg.components[0].components.length > 1) {
-                const row = new MessageActionRow()
-                .addComponents(
-                    new MessageButton()
-                        .setCustomId('Closed')
-                        .setLabel('Closed')
-                        .setStyle('DANGER')
-                        .setDisabled(true));
-                await msg.edit({embeds: msg.embeds, components: [row]});
-                console.log('Removed Buttons for event ' + event);
-              }
-            } catch (err) {
-              console.error(`Couldn't remove buttons for event ${event}`, err);
-              continue;
-            }
-          } catch (err) {
-            console.log('Couldn\'t find message for event ' + event);
+          if(msg.components.length === 0 || msg.components[0].components.length > 1) {
+            const row = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId('Closed')
+                    .setLabel('Closed')
+                    .setStyle('DANGER')
+                    .setDisabled(true));
+            await msg.edit({embeds: msg.embeds, components: [row]});
+            console.log('Removed Buttons for event ' + event);
           }
         } catch (err) {
-          console.log('Couln\'t find channel for event ' + event);
+          console.error(`Couldn't remove buttons for event ${event}`, err);
+          continue;
         }
-      } catch (err) {
-        console.log('Couldn\'t find guild for event '+ event);
       }
     }
   }
+
+  private static async handleReminder(now: Date) {
+    const events:  {name: string, date: string}[] = await sqlHandler.getEvents(false);
+    for (const event of events) {
+      const eventDate: Date = new Date(parseInt(event.date, 10)*1000);
+      const diff = eventDate.getTime() - now.getTime();
+      if (diff < 24*60*60*1000) {
+        const eventId = await sqlHandler.getEventId(event.name, event.date);
+        const users = await sqlHandler.getSignups(eventId);
+        const unavailable = await sqlHandler.getUnavailables(eventId);
+        if (unavailable.length + users.length < 60) {
+          console.log(diff);
+          if (now.getHours() === 9 && now.getMinutes() === 0) {
+            const eventMsg = await this.getMessageForEvent(eventId);
+            if(eventMsg) {
+              eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
+                guild: eventMsg.guild,
+                title: languageHandler.language.messages.reminder.early_title,
+                description: languageHandler.replaceArgs(languageHandler.language.messages.reminder.early_description,[event.name, dateHandler.getCESTStringFromDate(eventDate).join(' ')])
+              }));
+            }
+          } else if (diff <= 3*60*60*1000 && diff >= 3*59*60*1000) {
+            const eventMsg = await this.getMessageForEvent(eventId);
+            if(eventMsg) {
+              eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
+                guild: eventMsg.guild,
+                title: languageHandler.language.messages.reminder.hours_title,
+                description: languageHandler.replaceArgs(languageHandler.language.messages.reminder.hours_description,[event.name, dateHandler.getCESTStringFromDate(eventDate).join(' ')])
+              }));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private static async getMessageForEvent(eventId: string) {
+    const message = await sqlHandler.getMessageEvent(eventId);
+    try {
+      const guild = discordHandler.client.guilds.cache.get(message.guildId);
+      try {
+        const channel: TextChannel = (await guild.channels.fetch(message.channelId)) as TextChannel;
+        try {
+          return await channel.messages.fetch(message.messageId);
+        } catch (err) {
+          console.log('Couldn\'t find message for event ' + eventId);
+        }
+      } catch (err) {
+        console.log('Couln\'t find channel for event ' + eventId);
+      }
+    } catch (err) {
+      console.log('Couldn\'t find guild for event '+ eventId);
+    }
+    return undefined;
+   }
 }
