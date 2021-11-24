@@ -68,24 +68,26 @@ export class IntervalHandlers {
         const users = await sqlHandler.getSignups(eventId);
         const unavailable = await sqlHandler.getUnavailables(eventId);
         if (unavailable.length + users.length < 60) {
-          console.log(diff);
-          if (now.getHours() === 9 && now.getMinutes() === 0) {
+          const messages = await sqlHandler.getReminders(eventId);
+          if (((messages.length > 0 && !messages.find(msg => msg.type === 0)) || messages.length === 0) && now.getHours() === 9 && now.getMinutes() === 0) {
             const eventMsg = await this.getMessageForEvent(eventId);
             if(eventMsg) {
-              eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
+              const msg = await eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
                 guild: eventMsg.guild,
                 title: languageHandler.language.messages.reminder.early_title,
                 description: languageHandler.replaceArgs(languageHandler.language.messages.reminder.early_description,[event.name, dateHandler.getCESTStringFromDate(eventDate).join(' ')])
               }));
+              await sqlHandler.addReminder(eventId, msg.id, msg.channel.id, msg.guild.id, 0);
             }
-          } else if (diff <= 3*60*60*1000 && diff >= 3*59*60*1000) {
+          } else if (((messages.length > 0 && !messages.find(msg => msg.type === 1)) || messages.length === 0) && diff <= 3*60*60*1000 && diff >= 3*59*60*1000) {
             const eventMsg = await this.getMessageForEvent(eventId);
             if(eventMsg) {
-              eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
+              const msg = await eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
                 guild: eventMsg.guild,
                 title: languageHandler.language.messages.reminder.hours_title,
                 description: languageHandler.replaceArgs(languageHandler.language.messages.reminder.hours_description,[event.name, dateHandler.getCESTStringFromDate(eventDate).join(' ')])
               }));
+              await sqlHandler.addReminder(eventId, msg.id, msg.channel.id, msg.guild.id, 1);
             }
           }
         }
@@ -111,5 +113,5 @@ export class IntervalHandlers {
       console.log('Couldn\'t find guild for event '+ eventId);
     }
     return undefined;
-   }
+  }
 }
