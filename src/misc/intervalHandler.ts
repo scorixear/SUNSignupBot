@@ -27,7 +27,20 @@ export class IntervalHandlers {
           console.log('Deleted message for event ' + event);
         } catch (err) {
           console.error(`Couldn't delete message for event ${event}`, err);
-          continue;
+        }
+        await sqlHandler.removeMessageEvent(event, msg.id, msg.channel.id, msg.guild.id);
+        const reminders = await sqlHandler.getReminders(event);
+        for(const reminder of reminders) {
+          const reminderMsg = await this.getDiscordMessage(event, reminder.messageId, reminder.channelId, reminder.guildId);
+          if(reminderMsg) {
+            try {
+              await reminderMsg.delete();
+              console.log('Delete reminder fro event ' + event);
+            } catch (err) {
+              console.error(`Couldn't delete message for event ${event}`, err);
+            }
+            await sqlHandler.removeReminder(event, reminder.messageId, reminder.channelId, reminder.guildId);
+          }
         }
       }
       sqlHandler.closeEvent(event);
@@ -97,12 +110,16 @@ export class IntervalHandlers {
 
   private static async getMessageForEvent(eventId: string) {
     const message = await sqlHandler.getMessageEvent(eventId);
+    return this.getDiscordMessage(eventId, message.messageId, message.channelId, message.guildId);
+  }
+
+  private static async getDiscordMessage(eventId: string, messageId: string, channelId: string, guildId: string) {
     try {
-      const guild = discordHandler.client.guilds.cache.get(message.guildId);
+      const guild = discordHandler.client.guilds.cache.get(guildId);
       try {
-        const channel: TextChannel = (await guild.channels.fetch(message.channelId)) as TextChannel;
+        const channel: TextChannel = (await guild.channels.fetch(channelId)) as TextChannel;
         try {
-          return await channel.messages.fetch(message.messageId);
+          return await channel.messages.fetch(messageId);
         } catch (err) {
           console.log('Couldn\'t find message for event ' + eventId);
         }
