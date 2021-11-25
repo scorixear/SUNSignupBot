@@ -35,7 +35,7 @@ export class IntervalHandlers {
           if(reminderMsg) {
             try {
               await reminderMsg.delete();
-              console.log('Delete reminder fro event ' + event);
+              console.log('Delete reminder for event ' + event);
             } catch (err) {
               console.error(`Couldn't delete message for event ${event}`, err);
             }
@@ -124,7 +124,7 @@ export class IntervalHandlers {
           console.log('Couldn\'t find message for event ' + eventId);
         }
       } catch (err) {
-        console.log('Couln\'t find channel for event ' + eventId);
+        console.log('Couldn\'t find channel for event ' + eventId);
       }
     } catch (err) {
       console.log('Couldn\'t find guild for event '+ eventId);

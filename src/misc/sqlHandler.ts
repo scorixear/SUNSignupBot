@@ -28,7 +28,7 @@ export default class SqlHandler {
       await conn.query('CREATE TABLE IF NOT EXISTS `messageEvents` (`eventId` VARCHAR(255), `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), PRIMARY KEY(`eventId`))');
       await conn.query('CREATE TABLE IF NOT EXISTS `unavailable` (`eventId` VARCHAR(255), `userId` VARCHAR(255), PRIMARY KEY (`eventId`,`userId`))');
       await conn.query('CREATE TABLE IF NOT EXISTS `users` (`userId` VARCHAR(255), `name` VARCHAR(255), `weapon1` VARCHAR(255), `weapon2` VARCHAR(255), `role` VARCHAR(255), `guild` VARCHAR(255), `level` INT, `gearscore` INT, PRIMARY KEY(`userId`))');
-      await conn.query('CREATE TABLE IF NOT EXISTS `reminders` (`messageId` INT NOT NULL AUTO_INCREMENT, `channelId` VARCHAR(255), `guildId` VARCHAR(255), `eventId` VARCHAR(255), `type` INT(2), PRIMARY KEY(`messageId`))');
+      await conn.query('CREATE TABLE IF NOT EXISTS `reminders` (`id` INT NOT NULL AUTO_INCREMENT, `messageId` VARCHAR(255), `channelId` VARCHAR(255), `guildId` VARCHAR(255), `eventId` VARCHAR(255), `type` INT(2), PRIMARY KEY(`id`))');
     } catch (error) {
       throw error;
     } finally {
