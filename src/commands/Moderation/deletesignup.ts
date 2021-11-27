@@ -76,6 +76,21 @@ export default class Deletesignup extends CommandInteractionHandle {
           } catch (err) {}
         } catch (err) {}
       } catch (err) {}
+
+      const reminders = await sqlHandler.getReminders(eventId);
+      for(const reminder of reminders) {
+        try {
+          const guild  = discordHandler.client.guilds.cache.get(reminder.guildId);
+          try {
+            const channel = await guild.channels.fetch(reminder.channelId) as TextChannel;
+            try {
+              const msg = await channel.messages.fetch(reminder.messageId);
+              await msg.delete();
+            } catch (err) {}
+          } catch (err) {}
+        } catch (err) {}
+      }
+
       await sqlHandler.deleteEvent(eventName, eventTimestamp.toString());
       interaction.reply(await messageHandler.getRichTextExplicitDefault({
         guild: interaction.guild,

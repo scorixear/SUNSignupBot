@@ -153,6 +153,14 @@
       "error": "Invalid permissions to use `$0$1`!"
     }
   },
+  "messages": {
+    "reminder": {
+      "early_title": "🕘Reminder of the morning🕘",
+      "early_description": "Small reminder of the Morning. Please respond to the war I replied to.\nName: $0\nDate: $1",
+      "hours_title": ":bangbang:Late Reminder:bangbang:",
+      "hours_description": "Please sign up for the upcoming war (the message I replied to).\nName: $0\nDate: $1"
+    }
+  },
   "general": {
     "error": "Error",
     "description": "Description",
