@@ -82,7 +82,7 @@ export class IntervalHandlers {
         const unavailable = await sqlHandler.getUnavailables(eventId);
         if (unavailable.length + users.length < 60) {
           const messages = await sqlHandler.getReminders(eventId);
-          if (((messages.length > 0 && !messages.find(msg => msg.type === 0)) || messages.length === 0) && now.getHours() === 9 && now.getMinutes() === 0) {
+          if (((messages.length > 0 && !messages.find(msg => msg.type === 0)) || messages.length === 0) && now.getHours() <= 9) {
             const eventMsg = await this.getMessageForEvent(eventId);
             if(eventMsg) {
               const msg = await eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
@@ -92,7 +92,7 @@ export class IntervalHandlers {
               }));
               await sqlHandler.addReminder(eventId, msg.id, msg.channel.id, msg.guild.id, 0);
             }
-          } else if (((messages.length > 0 && !messages.find(msg => msg.type === 1)) || messages.length === 0) && diff <= 3*60*60*1000 && diff >= 3*59*60*1000) {
+          } else if (((messages.length > 0 && !messages.find(msg => msg.type === 1)) || messages.length === 0) && diff <= 3*60*60*1000) {
             const eventMsg = await this.getMessageForEvent(eventId);
             if(eventMsg) {
               const msg = await eventMsg.reply(await messageHandler.getRichTextExplicitDefault({
